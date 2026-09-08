@@ -196,13 +196,9 @@ export function SettingsView({ currentUser, onUpdateUser, onLogout }: SettingsVi
       const res = await verifyEmailOtpApi(currentUser._id, entered);
       if (res.success) {
         setIsVerified(true);
-        if (res.data) {
-          onUpdateUser(res.data);
-        }
-        localStorage.setItem(`email_verified_${currentUser._id}`, 'true');
         setShowOtpModal(false);
-        setSuccessMsg('Email verified successfully! 🎉');
-        setTimeout(() => setSuccessMsg(''), 4000);
+        setSuccessMsg('Email verified successfully! Click "Save Changes" below to update your profile in the database. ✅');
+        setTimeout(() => setSuccessMsg(''), 5000);
       } else {
         setOtpError(res.message || 'Invalid verification code');
       }
@@ -221,20 +217,31 @@ export function SettingsView({ currentUser, onUpdateUser, onLogout }: SettingsVi
       return;
     }
 
+    // Require email verification before allowing save to MongoDB
+    if (!isVerified) {
+      setErrorMsg('Please verify your email with OTP first before saving changes! ⚠️');
+      setTimeout(() => setErrorMsg(''), 4000);
+      handleSendOtp();
+      return;
+    }
+
     try {
       setProfileSaving(true);
       const res = await updateProfileApi(currentUser._id, usernameInput.trim(), emailInput.trim());
       if (res.success && res.data) {
-        onUpdateUser(res.data);
-        setSuccessMsg('Profile updated and saved to MongoDB successfully! ✅');
-        setTimeout(() => setSuccessMsg(''), 3000);
+        // Sync user state and store verified flag in localStorage
+        const updatedUser = { ...res.data, isEmailVerified: true };
+        onUpdateUser(updatedUser);
+        localStorage.setItem(`email_verified_${currentUser._id}`, 'true');
+        setSuccessMsg('Profile changes saved to MongoDB successfully! ✅');
+        setTimeout(() => setSuccessMsg(''), 3500);
       } else {
         setErrorMsg(res.message || 'Failed to update profile in database');
-        setTimeout(() => setErrorMsg(''), 3000);
+        setTimeout(() => setErrorMsg(''), 3500);
       }
     } catch (err: any) {
       setErrorMsg(err.response?.data?.message || 'Error updating profile in database');
-      setTimeout(() => setErrorMsg(''), 3000);
+      setTimeout(() => setErrorMsg(''), 3500);
     } finally {
       setProfileSaving(false);
     }
@@ -587,27 +594,33 @@ export function SettingsView({ currentUser, onUpdateUser, onLogout }: SettingsVi
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '14px', marginTop: '4px' }}>
+                  {!isVerified && (
+                    <span style={{ fontSize: '12px', color: '#facc15', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                      Verify email first to save
+                    </span>
+                  )}
                   <button
                     type="submit"
-                    disabled={profileSaving || (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase())}
+                    disabled={profileSaving || !isVerified || (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase() && (currentUser.isEmailVerified ?? false))}
                     style={{
                       padding: '10px 22px',
                       borderRadius: '12px',
-                      background: (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase())
+                      background: (profileSaving || !isVerified || (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase() && (currentUser.isEmailVerified ?? false)))
                         ? 'rgba(99, 102, 241, 0.22)'
                         : 'linear-gradient(135deg, var(--accent-color, #6366f1), #8b5cf6)',
-                      color: (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase())
+                      color: (profileSaving || !isVerified || (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase() && (currentUser.isEmailVerified ?? false)))
                         ? 'rgba(199, 210, 254, 0.75)'
                         : '#fff',
                       fontSize: '13px',
                       fontWeight: '600',
-                      border: (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase())
+                      border: (profileSaving || !isVerified || (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase() && (currentUser.isEmailVerified ?? false)))
                         ? '1px solid rgba(99, 102, 241, 0.35)'
                         : 'none',
-                      cursor: profileSaving || (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase()) ? 'not-allowed' : 'pointer',
+                      cursor: (profileSaving || !isVerified || (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase() && (currentUser.isEmailVerified ?? false))) ? 'not-allowed' : 'pointer',
                       opacity: profileSaving ? 0.6 : 1,
-                      boxShadow: (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase())
+                      boxShadow: (profileSaving || !isVerified || (usernameInput.trim() === (currentUser.username || '').trim() && emailInput.trim().toLowerCase() === (currentUser.email || '').trim().toLowerCase() && (currentUser.isEmailVerified ?? false)))
                         ? '0 2px 6px rgba(0, 0, 0, 0.1)'
                         : '0 4px 14px rgba(99, 102, 241, 0.35)',
                       transition: 'all 0.25s ease',

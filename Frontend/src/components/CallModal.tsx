@@ -84,6 +84,24 @@ export const CallModal: React.FC<CallModalProps> = ({
   const [availableUsers, setAvailableUsers] = useState<UserProfile[]>([]);
   const [searchUserQuery, setSearchUserQuery] = useState('');
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [usersProfileMap, setUsersProfileMap] = useState<Record<string, UserProfile>>({});
+
+  // Auto-fetch all user profiles on mount or call active to resolve participant names & avatars
+  useEffect(() => {
+    let isMounted = true;
+    getAllUsersApi().then((res) => {
+      if (isMounted && res.success && Array.isArray(res.data)) {
+        const map: Record<string, UserProfile> = {};
+        res.data.forEach((u) => {
+          map[u._id] = u;
+        });
+        setUsersProfileMap(map);
+      }
+    }).catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [callState.callAccepted, callState.isCalling, callState.isReceivingCall]);
 
   // Settings state
   const [noiseSuppression, setNoiseSuppression] = useState(true);
@@ -120,6 +138,12 @@ export const CallModal: React.FC<CallModalProps> = ({
       setLoadingUsers(true);
       const res = await getAllUsersApi();
       if (res.success) {
+        const map: Record<string, UserProfile> = {};
+        res.data.forEach((u) => {
+          map[u._id] = u;
+        });
+        setUsersProfileMap(map);
+
         const activeIds = new Set([
           currentUser?._id,
           callState.caller?.id,
@@ -378,20 +402,24 @@ export const CallModal: React.FC<CallModalProps> = ({
                 {/* Additional Participants Videos (for 3+ people) */}
                 {participants.length > 1 && (
                   <div className="additional-participants-row">
-                    {participants.slice(1).map((p) => (
-                      <div key={p.id} className="participant-video-tile" style={{ position: 'relative' }}>
-                        <video
-                          playsInline
-                          autoPlay
-                          ref={(el) => {
-                            if (el && p.stream) el.srcObject = p.stream;
-                          }}
-                        />
-                        <div className="participant-tile-name">
-                          {p.name} {mutedParticipants.includes(p.id) ? '🔇' : ''}
+                    {participants.slice(1).map((p) => {
+                      const userObj = usersProfileMap[p.id];
+                      const displayName = (p.name && p.name !== 'Participant' && p.name !== 'Group Member') ? p.name : (userObj?.username || p.name || 'User');
+                      return (
+                        <div key={p.id} className="participant-video-tile" style={{ position: 'relative' }}>
+                          <video
+                            playsInline
+                            autoPlay
+                            ref={(el) => {
+                              if (el && p.stream) el.srcObject = p.stream;
+                            }}
+                          />
+                          <div className="participant-tile-name">
+                            {displayName} {mutedParticipants.includes(p.id) ? '🔇' : ''}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
@@ -427,14 +455,19 @@ export const CallModal: React.FC<CallModalProps> = ({
                   {/* Remote / other participants */}
                   {participants.length > 0 ? (
                     participants.map((p) => {
+                      const userObj = usersProfileMap[p.id];
+                      const displayName = (p.name && p.name !== 'Participant' && p.name !== 'Group Member') ? p.name : (userObj?.username || p.name || 'User');
+                      const displayAvatar = p.avatar || userObj?.avatar;
+                      const initial = displayName.charAt(0).toUpperCase() || 'U';
                       const isPeerMuted = mutedParticipants.includes(p.id);
+
                       return (
                         <div key={p.id} style={{ textAlign: 'center' }}>
                           <div className="caller-avatar active-audio" style={{ width: 84, height: 84, fontSize: '2rem', overflow: 'hidden', position: 'relative' }}>
-                            {p.avatar ? (
-                              <img src={p.avatar} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            {displayAvatar ? (
+                              <img src={displayAvatar} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
-                              p.name.charAt(0).toUpperCase()
+                              initial
                             )}
                             {isPeerMuted && (
                               <div style={{ position: 'absolute', bottom: 0, right: 0, background: '#ef4444', borderRadius: '50%', padding: '4px', display: 'flex' }}>
@@ -442,8 +475,8 @@ export const CallModal: React.FC<CallModalProps> = ({
                               </div>
                             )}
                           </div>
-                          <div style={{ fontSize: '13px', color: '#cbd5e1', marginTop: '4px' }}>
-                            {p.name} {isPeerMuted ? '(Muted)' : ''}
+                          <div style={{ fontSize: '13px', color: '#cbd5e1', marginTop: '4px', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {displayName} {isPeerMuted ? '(Muted)' : ''}
                           </div>
                         </div>
                       );
@@ -462,7 +495,7 @@ export const CallModal: React.FC<CallModalProps> = ({
                           </div>
                         )}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#cbd5e1', marginTop: '4px' }}>
+                      <div style={{ fontSize: '13px', color: '#cbd5e1', marginTop: '4px', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {callState.caller?.name || 'In Call'} {callState.caller && mutedParticipants.includes(callState.caller.id) ? '(Muted)' : ''}
                       </div>
                     </div>
@@ -674,25 +707,40 @@ export const CallModal: React.FC<CallModalProps> = ({
 
                 {/* Other Joined Participants */}
                 {participants.length > 0 ? (
-                  participants.map((p) => (
-                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                          {p.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '14px', fontWeight: 500 }}>{p.name}</div>
-                          <div style={{ fontSize: '12px', color: '#22c55e' }}>In Call</div>
+                  participants.map((p) => {
+                    const userObj = usersProfileMap[p.id];
+                    const displayName = (p.name && p.name !== 'Participant' && p.name !== 'Group Member') ? p.name : (userObj?.username || p.name || 'User');
+                    const displayAvatar = p.avatar || userObj?.avatar;
+                    const initial = displayName.charAt(0).toUpperCase() || 'U';
+
+                    return (
+                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden' }}>
+                            {displayAvatar ? (
+                              <img src={displayAvatar} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              initial
+                            )}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '14px', fontWeight: 500 }}>{displayName}</div>
+                            <div style={{ fontSize: '12px', color: '#22c55e' }}>In Call</div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   callState.caller && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                          {callState.caller.name.charAt(0).toUpperCase()}
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden' }}>
+                          {callState.caller.avatar ? (
+                            <img src={callState.caller.avatar} alt={callState.caller.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            callState.caller.name.charAt(0).toUpperCase()
+                          )}
                         </div>
                         <div>
                           <div style={{ fontSize: '14px', fontWeight: 500 }}>{callState.caller.name}</div>

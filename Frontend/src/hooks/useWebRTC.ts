@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { getSocket } from '../services/socket';
 import { UserProfile } from '../types/chat.types';
 import { soundService } from '../services/soundService';
+import { getAllUsersApi, getUserByIdApi } from '../services/userService';
 
 export type ConnectionQuality = 'connected' | 'connecting' | 'reconnecting' | 'failed' | 'disconnected';
 
@@ -215,9 +216,21 @@ export function useWebRTC(currentUser: UserProfile | null) {
 
     peerConnections.current.set(targetUserId, peer);
 
-    // Track participant in state
+    // Track participant in state or update if name/avatar became available
     setParticipants((prev) => {
-      if (prev.some((p) => p.id === targetUserId)) return prev;
+      const existingIndex = prev.findIndex((p) => p.id === targetUserId);
+      if (existingIndex >= 0) {
+        return prev.map((p) =>
+          p.id === targetUserId
+            ? {
+                ...p,
+                name: targetUserInfo?.name && targetUserInfo.name !== 'Participant' && targetUserInfo.name !== 'Group Member' ? targetUserInfo.name : p.name,
+                avatar: targetUserInfo?.avatar || p.avatar,
+                stream: userStream || p.stream,
+              }
+            : p
+        );
+      }
       return [
         ...prev,
         {
@@ -632,6 +645,84 @@ export function useWebRTC(currentUser: UserProfile | null) {
     }
   };
 
+  // Start a full group voice or video call
+  const startGroupCall = async (group: any, isVideoCall: boolean) => {
+    if (!currentUser || !group) return;
+    clearCallTimeout();
+    soundService.playDialtone();
+
+    const roomId = `group_${group._id}`;
+    const otherMembers: any[] = (group.members || []).filter((m: any) => {
+      const id = typeof m === 'string' ? m : m._id;
+      return id !== currentUser._id;
+    });
+
+    // Fetch all user profiles to ensure we have member names & avatars
+    let usersMap: Record<string, UserProfile> = {};
+    try {
+      const usersRes = await getAllUsersApi();
+      if (usersRes?.success && Array.isArray(usersRes.data)) {
+        usersRes.data.forEach((u) => {
+          usersMap[u._id] = u;
+        });
+      }
+    } catch (e) {
+      console.warn('Could not pre-fetch users for group call:', e);
+    }
+
+    setCallState({
+      isReceivingCall: false,
+      isCalling: true,
+      callAccepted: true,
+      callEnded: false,
+      caller: { id: group._id, name: group.name, avatar: group.avatar },
+      isVideoCall,
+      startedAt: new Date(),
+      roomId,
+    });
+    setLocalMicMuted(false);
+    setLocalVideoOff(false);
+
+    await getMedia(isVideoCall);
+
+    const socket = getSocket();
+    // Join multi-user call room
+    socket.emit('join_call_room', {
+      roomId,
+      user: { _id: currentUser._id, username: currentUser.username, avatar: currentUser.avatar },
+      isVideoCall,
+    });
+
+    // Ring all other group members simultaneously with their proper info
+    for (const member of otherMembers) {
+      const memberId = typeof member === 'string' ? member : member._id;
+      const memberProfile = typeof member === 'object' && member.username ? member : usersMap[memberId];
+      const memberName = memberProfile?.username || 'Group Member';
+      const memberAvatar = memberProfile?.avatar;
+
+      try {
+        const peer = createPeerConnection(memberId, { name: memberName, avatar: memberAvatar });
+        const offer = await peer.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: isVideoCall,
+        });
+        await peer.setLocalDescription(offer);
+
+        socket.emit('call_user', {
+          userToCall: memberId,
+          signalData: offer,
+          from: currentUser._id,
+          name: `${group.name} (Group Call)`,
+          avatar: group.avatar || currentUser.avatar,
+          isVideoCall,
+          callRoomId: roomId,
+        });
+      } catch (e) {
+        console.error(`Error ringing group member ${memberId}:`, e);
+      }
+    }
+  };
+
   // Ring/invite additional participant mid-call
   const inviteParticipant = async (userToInvite: UserProfile) => {
     if (!currentUser || !callState.callAccepted) return;
@@ -996,6 +1087,7 @@ export function useWebRTC(currentUser: UserProfile | null) {
     localVideoRef,
     remoteVideoRef,
     callUser,
+    startGroupCall,
     answerCall,
     leaveCall,
     inviteParticipant,

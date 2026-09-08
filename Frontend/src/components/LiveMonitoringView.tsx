@@ -90,7 +90,7 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
   const captureVideoSnapshot = useCallback(async (type: 'manual' | 'interval' = 'manual') => {
     if (!remoteVideoRef.current || !selectedUser) return;
     const video = remoteVideoRef.current;
-    if (video.videoWidth === 0 || video.videoHeight === 0) return;
+    if (!video.videoWidth || !video.videoHeight) return;
 
     try {
       const canvas = document.createElement('canvas');
@@ -99,16 +99,20 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
+      // Draw the exact video frame at native resolution
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Add timestamp watermark
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-      ctx.fillRect(16, canvas.height - 48, 380, 36);
+      // Add a clean timestamp watermark bar
+      const barHeight = Math.max(36, Math.floor(canvas.height * 0.045));
+      const fontSize = Math.max(14, Math.floor(canvas.height * 0.022));
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
       ctx.fillStyle = '#4ade80';
-      ctx.font = 'bold 14px monospace';
-      ctx.fillText(`LIVE CAPTURE: ${new Date().toLocaleString()}`, 26, canvas.height - 25);
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`● LIVE CAPTURE [${selectedUser.username}] - ${new Date().toLocaleString()}`, 20, canvas.height - (barHeight / 2));
 
-      const base64Image = canvas.toDataURL('image/jpeg', 0.85);
+      const base64Image = canvas.toDataURL('image/jpeg', 0.88);
 
       const res = await saveScreenshotApi({
         targetUserId: selectedUser._id,
@@ -587,22 +591,25 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
             {/* Video Viewport Card */}
             <div style={{
               width: '100%',
-              height: '420px',
+              minHeight: '380px',
+              maxHeight: '520px',
+              aspectRatio: '16 / 9',
               borderRadius: '20px',
               background: '#070b13',
-              border: '1px solid var(--border-color, rgba(255,255,255,0.1))',
+              border: '1px solid var(--border-color, rgba(255,255,255,0.12))',
               position: 'relative',
               overflow: 'hidden',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+              boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
               marginBottom: '28px',
             }}>
               <video
                 ref={remoteVideoRef}
                 autoPlay
                 playsInline
+                muted
                 style={{
                   width: '100%',
                   height: '100%',
@@ -660,7 +667,7 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
                   No screenshots recorded yet. Start live monitoring or click "Take Snapshot" to capture activity.
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
                   {screenshots.map((s) => (
                     <div
                       key={s._id}
@@ -668,30 +675,40 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
                         borderRadius: '14px',
                         overflow: 'hidden',
                         background: 'var(--bg-card, #131b2e)',
-                        border: '1px solid var(--border-color, rgba(255,255,255,0.1))',
+                        border: '1px solid var(--border-color, rgba(255,255,255,0.12))',
                         position: 'relative',
                         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                       }}
                     >
                       <div
                         onClick={() => setSelectedImage(s.imageUrl)}
-                        style={{ height: '135px', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}
+                        style={{ height: '160px', overflow: 'hidden', cursor: 'pointer', position: 'relative', background: '#020617' }}
                       >
-                        <img src={s.imageUrl} alt="Snapshot" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img
+                          src={s.imageUrl}
+                          alt="Snapshot"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            display: 'block',
+                            background: '#020617'
+                          }}
+                        />
                         <span style={{
                           position: 'absolute', top: '8px', left: '8px',
-                          background: 'rgba(0,0,0,0.7)',
+                          background: 'rgba(0,0,0,0.75)',
                           backdropFilter: 'blur(4px)',
                           color: s.captureType === 'manual' ? '#10b981' : '#818cf8',
-                          padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '700',
+                          padding: '3px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '700',
                           textTransform: 'uppercase',
                         }}>
                           {s.captureType}
                         </span>
                       </div>
 
-                      <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted, #94a3b8)' }}>
+                      <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)' }}>
+                        <div style={{ fontSize: '11.5px', color: 'var(--text-muted, #94a3b8)', fontWeight: '500' }}>
                           {new Date(s.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                         </div>
                         <button
@@ -702,7 +719,7 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
                             border: 'none',
                             color: '#ef4444',
                             cursor: 'pointer',
-                            padding: '2px',
+                            padding: '4px',
                             display: 'flex',
                             alignItems: 'center',
                           }}

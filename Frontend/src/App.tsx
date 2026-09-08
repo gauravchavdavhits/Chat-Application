@@ -115,6 +115,7 @@ export default function App() {
     localVideoRef,
     remoteVideoRef,
     callUser,
+    startGroupCall,
     answerCall,
     leaveCall,
     inviteParticipant,
@@ -134,14 +135,20 @@ export default function App() {
     changeAudioOutput,
   } = useWebRTC(currentUser);
 
-  const handleCallUser = (userId: string, isVideoCall: boolean, name?: string, avatar?: string) => {
+  const handleCallUser = (targetId: string, isVideoCall: boolean, name?: string, avatar?: string) => {
+    // If target matches currently selected group, initiate a group call
+    if (selectedGroup && selectedGroup._id === targetId) {
+      startGroupCall(selectedGroup, isVideoCall);
+      return;
+    }
+
     let targetName = name;
     let targetAvatar = avatar;
-    if (!targetName && selectedFriend && selectedFriend._id === userId) {
+    if (!targetName && selectedFriend && selectedFriend._id === targetId) {
       targetName = selectedFriend.username;
       targetAvatar = selectedFriend.avatar;
     }
-    callUser(userId, isVideoCall, targetName, targetAvatar);
+    callUser(targetId, isVideoCall, targetName, targetAvatar);
   };
 
   const handleSelectFriend = (friend: UserProfile) => {
