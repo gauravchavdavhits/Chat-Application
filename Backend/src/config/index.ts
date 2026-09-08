@@ -1,7 +1,9 @@
+import path from 'path';
 import dotenv from 'dotenv';
 
-// Load environment variables from .env file
-dotenv.config();
+// Load environment variables from project root .env or local fallback
+dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 export const config = {
   port: process.env.PORT || 5000,
