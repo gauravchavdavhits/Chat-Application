@@ -124,7 +124,7 @@ export interface ClientToServerEvents {
   typing: (data: { conversationId: string | null; senderId: string; senderName: string; receiverId?: string; groupId?: string }) => void;
   stop_typing: (data: { conversationId: string | null; senderId: string; receiverId?: string; groupId?: string }) => void;
   call_user: (data: { userToCall: string; signalData: any; from: string; name: string; avatar?: string; isVideoCall: boolean; callRoomId?: string }) => void;
-  answer_call: (data: { to: string; signal: any }) => void;
+  answer_call: (data: { to: string; from?: string; signal: any }) => void;
   ice_candidate: (data: { to: string; candidate: RTCIceCandidateInit; from?: string }) => void;
   join_call_room: (data: { roomId: string; user: { _id: string; username: string; avatar?: string }; isVideoCall: boolean }) => void;
   call_room_signal: (data: { to: string; from: any; signal: any; isVideoCall: boolean }) => void;

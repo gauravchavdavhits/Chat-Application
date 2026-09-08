@@ -382,8 +382,10 @@ export const registerChatSocket = (io: Server): void => {
     });
 
     socket.on('answer_call', (data: any) => {
-      const myId = socketUserMap.get(socket.id);
+      const myId = data.from || socketUserMap.get(socket.id);
       if (myId) activeCallUsers.add(myId);
+
+      logger.info(`📞 answer_call: from=${myId}, to=${data.to}, signal type=${data.signal?.type}`);
 
       io.to(data.to).emit('call_accepted', {
         signal: data.signal,

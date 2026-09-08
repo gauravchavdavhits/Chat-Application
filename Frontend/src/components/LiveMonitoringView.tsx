@@ -307,44 +307,42 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
       setErrorMsg('Failed to delete screenshot');
       setTimeout(() => setErrorMsg(''), 3000);
     }
-  };
-
-  return (
-    <div style={{ display: 'flex', width: '100%', height: '100%', background: 'var(--bg-main, #0b0f19)', color: 'var(--text-main, #fff)', overflow: 'hidden' }}>
+  };  return (
+    <div style={{ display: 'flex', width: '100%', height: '100%', background: 'var(--bg-dark, #0b0f19)', color: 'var(--text-main, #fff)', overflow: 'hidden' }}>
       
       {/* ── Left Target Users Sidebar ──────────────────────── */}
       <div style={{
         width: '320px',
         flexShrink: 0,
-        borderRight: '1px solid var(--border-color, rgba(255,255,255,0.1))',
+        borderRight: '1px solid var(--border-color)',
         display: 'flex',
         flexDirection: 'column',
-        background: 'var(--bg-card, #131b2e)',
+        background: 'var(--sidebar-bg, #131b2e)',
       }}>
-        <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--border-color, rgba(255,255,255,0.1))' }}>
+        <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
             <div style={{
               width: '36px', height: '36px', borderRadius: '10px',
               background: 'linear-gradient(135deg, #ef4444, #f97316)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700' }}>Live Monitoring</h2>
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--text-main)' }}>Live Monitoring</h2>
               <span style={{ fontSize: '12px', color: '#4ade80', fontWeight: '600' }}>● Real-Time Feed</span>
             </div>
           </div>
 
           {/* Quick Telemetry Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '16px' }}>
-            <div style={{ background: 'rgba(255,255,255,0.04)', padding: '10px 12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted, #94a3b8)' }}>Active Online</span>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#4ade80' }}>{stats?.onlineCount ?? 0}</div>
+            <div style={{ background: 'var(--input-bg, #f1f5f9)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)' }}>Active Online</span>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: '#16a34a', marginTop: '2px' }}>{stats?.onlineCount ?? 0}</div>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.04)', padding: '10px 12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted, #94a3b8)' }}>Snapshots</span>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#818cf8' }}>{stats?.totalScreenshots ?? 0}</div>
+            <div style={{ background: 'var(--input-bg, #f1f5f9)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)' }}>Snapshots</span>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--accent-color, #6366f1)', marginTop: '2px' }}>{stats?.totalScreenshots ?? 0}</div>
             </div>
           </div>
         </div>
@@ -442,18 +440,19 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
               padding: '16px 20px',
               background: 'var(--bg-card, #131b2e)',
               borderRadius: '16px',
-              border: '1px solid var(--border-color, rgba(255,255,255,0.1))',
+              border: '1px solid var(--border-color)',
               marginBottom: '20px',
               flexWrap: 'wrap',
               gap: '12px',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <div style={{ width: '46px', height: '46px', borderRadius: '14px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>
                   {selectedUser.avatar ? <img src={selectedUser.avatar} alt={selectedUser.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : selectedUser.username.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h3 style={{ margin: '0 0 2px 0', fontSize: '17px', fontWeight: '700' }}>{selectedUser.username}</h3>
-                  <span style={{ fontSize: '12px', color: isStreaming ? '#4ade80' : 'var(--text-muted, #94a3b8)' }}>
+                  <h3 style={{ margin: '0 0 2px 0', fontSize: '17px', fontWeight: '700', color: 'var(--text-main)' }}>{selectedUser.username}</h3>
+                  <span style={{ fontSize: '12px', color: isStreaming ? '#16a34a' : 'var(--text-muted)' }}>
                     {isStreaming ? '● Live Stream Broadcasting' : 'Ready to Monitor'}
                   </span>
                 </div>
@@ -463,14 +462,14 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 
                 {/* Interval Selector */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '10px', border: '1px solid var(--border-color, rgba(255,255,255,0.1))' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>Interval:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--input-bg, #f1f5f9)', padding: '6px 12px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Interval:</span>
                   <select
                     value={intervalSeconds}
                     onChange={(e) => setIntervalSeconds(Number(e.target.value))}
                     style={{
                       background: 'transparent',
-                      color: '#fff',
+                      color: 'var(--text-main)',
                       border: 'none',
                       fontSize: '12px',
                       fontWeight: '600',
@@ -478,13 +477,13 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
                       cursor: 'pointer',
                     }}
                   >
-                    <option value={15} style={{ background: '#1e293b' }}>Every 15s (Testing)</option>
-                    <option value={30} style={{ background: '#1e293b' }}>Every 30s</option>
-                    <option value={60} style={{ background: '#1e293b' }}>Every 1 min</option>
-                    <option value={300} style={{ background: '#1e293b' }}>Every 5 mins</option>
-                    <option value={600} style={{ background: '#1e293b' }}>Every 10 mins</option>
-                    <option value={900} style={{ background: '#1e293b' }}>Every 15 mins</option>
-                    <option value={1800} style={{ background: '#1e293b' }}>Every 30 mins</option>
+                    <option value={15}>Every 15s (Testing)</option>
+                    <option value={30}>Every 30s</option>
+                    <option value={60}>Every 1 min</option>
+                    <option value={300}>Every 5 mins</option>
+                    <option value={600}>Every 10 mins</option>
+                    <option value={900}>Every 15 mins</option>
+                    <option value={1800}>Every 30 mins</option>
                   </select>
                 </div>
 
@@ -495,9 +494,9 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
                   style={{
                     padding: '8px 14px',
                     borderRadius: '10px',
-                    background: autoCaptureActive ? 'rgba(74, 222, 128, 0.15)' : 'rgba(255,255,255,0.06)',
-                    color: autoCaptureActive ? '#4ade80' : 'var(--text-muted, #94a3b8)',
-                    border: autoCaptureActive ? '1px solid rgba(74, 222, 128, 0.3)' : '1px solid rgba(255,255,255,0.1)',
+                    background: autoCaptureActive ? 'rgba(74, 222, 128, 0.18)' : 'var(--input-bg, #f1f5f9)',
+                    color: autoCaptureActive ? '#16a34a' : 'var(--text-muted)',
+                    border: autoCaptureActive ? '1px solid rgba(74, 222, 128, 0.4)' : '1px solid var(--border-color)',
                     fontSize: '12px',
                     fontWeight: '600',
                     cursor: 'pointer',

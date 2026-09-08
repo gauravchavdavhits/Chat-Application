@@ -11,7 +11,7 @@ interface CallsSidebarProps {
 export function CallsSidebar({ currentUser, onCallUser, newCallHistoryTrigger }: CallsSidebarProps) {
   const [calls, setCalls] = useState<CallRecord[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'missed' | 'voice' | 'video'>('all');
+  const [filter, setFilter] = useState<'all' | 'voice' | 'video'>('all');
 
   const fetchCalls = async () => {
     try {
@@ -33,7 +33,6 @@ export function CallsSidebar({ currentUser, onCallUser, newCallHistoryTrigger }:
 
   const filteredCalls = calls.filter((call) => {
     if (filter === 'all') return true;
-    if (filter === 'missed') return call.status === 'missed';
     if (filter === 'voice') return call.callType === 'voice';
     if (filter === 'video') return call.callType === 'video';
     return true;
@@ -63,7 +62,7 @@ export function CallsSidebar({ currentUser, onCallUser, newCallHistoryTrigger }:
       </div>
 
       <div style={{ display: 'flex', gap: '8px', padding: '16px 24px', overflowX: 'auto', borderBottom: '1px solid var(--border-color)' }}>
-        {['all', 'missed', 'voice', 'video'].map(f => (
+        {['all', 'voice', 'video'].map(f => (
           <button
             key={f}
             onClick={() => setFilter(f as any)}

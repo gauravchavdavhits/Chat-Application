@@ -235,6 +235,31 @@ export const CallModal: React.FC<CallModalProps> = ({
     };
   }, [callState.callAccepted]);
 
+  // Keep remoteVideoRef attached whenever participants list or streams change
+  useEffect(() => {
+    if (callState.callAccepted) {
+      const activeStream = participants[0]?.stream;
+      if (activeStream) {
+        // For video calls, bind to video element
+        if (callState.isVideoCall && remoteVideoRef.current) {
+          if (remoteVideoRef.current.srcObject !== activeStream) {
+            remoteVideoRef.current.srcObject = activeStream;
+            remoteVideoRef.current.muted = false;
+            remoteVideoRef.current.play().catch(() => {});
+          }
+        }
+        // For audio calls, also ensure the audio element has the stream
+        if (!callState.isVideoCall && remoteVideoRef.current) {
+          if (remoteVideoRef.current.srcObject !== activeStream) {
+            remoteVideoRef.current.srcObject = activeStream;
+            remoteVideoRef.current.muted = false;
+            remoteVideoRef.current.play().catch(() => {});
+          }
+        }
+      }
+    }
+  }, [participants, callState.callAccepted, callState.isVideoCall, remoteVideoRef]);
+
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -324,29 +349,35 @@ export const CallModal: React.FC<CallModalProps> = ({
                 </div>
 
                 {/* Connection Quality Status Badge */}
-                <div style={{
-                  padding: '4px 9px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600,
-                  display: 'flex', alignItems: 'center', gap: '5px',
-                  background: connectionQuality === 'connected' ? 'rgba(34, 197, 94, 0.15)' :
-                              connectionQuality === 'reconnecting' ? 'rgba(234, 179, 8, 0.2)' :
-                              'rgba(239, 68, 68, 0.2)',
-                  color: connectionQuality === 'connected' ? '#4ade80' :
-                         connectionQuality === 'reconnecting' ? '#facc15' : '#f87171',
-                  border: `1px solid ${
-                    connectionQuality === 'connected' ? 'rgba(34, 197, 94, 0.3)' :
-                    connectionQuality === 'reconnecting' ? 'rgba(234, 179, 8, 0.4)' :
-                    'rgba(239, 68, 68, 0.4)'
-                  }`
-                }}>
-                  <span style={{
-                    width: 6, height: 6, borderRadius: '50%',
-                    background: connectionQuality === 'connected' ? '#22c55e' :
-                                connectionQuality === 'reconnecting' ? '#eab308' : '#ef4444'
-                  }}></span>
-                  {connectionQuality === 'connected' ? 'HD Secure' :
-                   connectionQuality === 'reconnecting' ? 'Reconnecting...' :
-                   connectionQuality === 'connecting' ? 'Connecting...' : 'Network Weak'}
-                </div>
+                {(() => {
+                  const isConnected = connectionQuality === 'connected' || (callState.callAccepted && connectionQuality !== 'failed');
+                  const isFailed = connectionQuality === 'failed';
+                  
+                  return (
+                    <div style={{
+                      padding: '4px 9px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600,
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                      background: isConnected ? 'rgba(34, 197, 94, 0.15)' :
+                                  isFailed ? 'rgba(239, 68, 68, 0.2)' :
+                                  'rgba(234, 179, 8, 0.2)',
+                      color: isConnected ? '#4ade80' :
+                             isFailed ? '#f87171' : '#facc15',
+                      border: `1px solid ${
+                        isConnected ? 'rgba(34, 197, 94, 0.3)' :
+                        isFailed ? 'rgba(239, 68, 68, 0.4)' :
+                        'rgba(234, 179, 8, 0.4)'
+                      }`
+                    }}>
+                      <span style={{
+                        width: 6, height: 6, borderRadius: '50%',
+                        background: isConnected ? '#22c55e' :
+                                    isFailed ? '#ef4444' : '#eab308'
+                      }}></span>
+                      {isConnected ? 'HD Secure' :
+                       isFailed ? 'Disconnected' : 'Connecting...'}
+                    </div>
+                  );
+                })()}
               </div>
 
               <button
@@ -394,7 +425,13 @@ export const CallModal: React.FC<CallModalProps> = ({
                 {/* Main Remote Video */}
                 <video
                   playsInline
-                  ref={remoteVideoRef}
+                  ref={(el) => {
+                    (remoteVideoRef as any).current = el;
+                    if (el && participants[0]?.stream && el.srcObject !== participants[0].stream) {
+                      el.srcObject = participants[0].stream;
+                      el.play().catch(() => {});
+                    }
+                  }}
                   autoPlay
                   className="remote-video"
                 />
@@ -525,15 +562,6 @@ export const CallModal: React.FC<CallModalProps> = ({
                     style={{ position: 'fixed', left: '-9999px', opacity: 0, pointerEvents: 'none' }}
                   />
                 ))}
-                {/* Local audio element (always muted to prevent feedback loop) */}
-                <audio
-                  playsInline
-                  muted
-                  ref={localVideoRef}
-                  autoPlay
-                  controls={false}
-                  style={{ position: 'fixed', left: '-9999px', opacity: 0, pointerEvents: 'none' }}
-                />
               </div>
             )}
 

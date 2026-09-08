@@ -36,6 +36,10 @@ export function useWebRTC(currentUser: UserProfile | null) {
     isVideoCall: false,
   });
 
+  // Ref to always access latest callState in socket callbacks (avoids stale closures)
+  const callStateRef = useRef<CallState>(callState);
+  callStateRef.current = callState;
+
   const [participants, setParticipants] = useState<Participant[]>([]);
   const participantsRef = useRef<Participant[]>([]);
   participantsRef.current = participants;
@@ -47,6 +51,7 @@ export function useWebRTC(currentUser: UserProfile | null) {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localStream = useRef<MediaStream | null>(null);
   const remoteStream = useRef<MediaStream | null>(null);
+  const remoteStreams = useRef<Map<string, MediaStream>>(new Map());
   
   // Multi-peer map: targetUserId -> RTCPeerConnection
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
@@ -101,10 +106,25 @@ export function useWebRTC(currentUser: UserProfile | null) {
 
   const attachRemoteStream = () => {
     if (remoteVideoRef.current && remoteStream.current) {
-      remoteVideoRef.current.srcObject = remoteStream.current;
+      if (remoteVideoRef.current.srcObject !== remoteStream.current) {
+        remoteVideoRef.current.srcObject = remoteStream.current;
+      }
+      remoteVideoRef.current.muted = false;
       const p = remoteVideoRef.current.play();
       if (p !== undefined) {
-        p.catch((e) => console.warn('Remote video playback warning:', e));
+        p.catch((e) => {
+          console.warn('Remote stream auto-play pending user gesture:', e);
+          // Try playing on next user click anywhere in the window
+          const playOnGesture = () => {
+            if (remoteVideoRef.current) {
+              remoteVideoRef.current.play().catch(() => {});
+            }
+            window.removeEventListener('click', playOnGesture);
+            window.removeEventListener('touchstart', playOnGesture);
+          };
+          window.addEventListener('click', playOnGesture, { once: true });
+          window.addEventListener('touchstart', playOnGesture, { once: true });
+        });
       }
     }
   };
@@ -123,20 +143,47 @@ export function useWebRTC(currentUser: UserProfile | null) {
         localStream.current.getTracks().forEach(t => t.stop());
       }
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: video ? { width: { ideal: 1280 }, height: { ideal: 720 } } : false,
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        video: video ? {
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          frameRate: { ideal: 30, max: 60 }
+        } : false,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1,
+        }
       });
       localStream.current = stream;
       attachLocalStream();
       return stream;
     } catch (err) {
       console.error('Failed to get local stream', err);
+      // Fallback: If video failed (e.g. webcam in use or not found), try audio-only
+      if (video) {
+        try {
+          const audioOnlyStream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+          });
+          localStream.current = audioOnlyStream;
+          attachLocalStream();
+          return audioOnlyStream;
+        } catch (audioErr) {
+          console.error('Failed fallback to audio stream', audioErr);
+        }
+      }
       alert('Could not access camera or microphone. Please ensure permissions are granted.');
       return null;
     }
   };
 
-  const createPeerConnection = (targetUserId: string, targetUserInfo?: { name?: string; avatar?: string }) => {
+  const createPeerConnection = (
+    targetUserId: string,
+    targetUserInfo?: { name?: string; avatar?: string },
+    explicitStream?: MediaStream | null
+  ) => {
     const socket = getSocket();
     
     // If existing connection exists, close it first
@@ -152,30 +199,83 @@ export function useWebRTC(currentUser: UserProfile | null) {
         { urls: 'stun:stun3.l.google.com:19302' },
         { urls: 'stun:stun4.l.google.com:19302' },
         { urls: 'stun:global.stun.twilio.com:3478' },
+        { urls: 'stun:stun.services.mozilla.com' },
+        { urls: 'stun:stun.cloudflare.com:3478' },
       ],
       iceCandidatePoolSize: 10,
     });
 
     // Add local tracks to peer connection
-    if (localStream.current) {
-      localStream.current.getTracks().forEach((track) => {
-        peer.addTrack(track, localStream.current!);
+    const activeStream = explicitStream || localStream.current;
+    if (activeStream) {
+      const senders = peer.getSenders();
+      activeStream.getTracks().forEach((track) => {
+        if (!senders.some((s) => s.track === track)) {
+          peer.addTrack(track, activeStream);
+        }
       });
     }
 
-    let userStream = new MediaStream();
+    // Ensure audio & video transceivers are configured for bidirectional sendrecv
+    const currentSenders = peer.getSenders();
+    if (!currentSenders.some(s => s.track?.kind === 'audio')) {
+      try { peer.addTransceiver('audio', { direction: 'sendrecv' }); } catch (e) {}
+    }
+    if (!currentSenders.some(s => s.track?.kind === 'video')) {
+      try { peer.addTransceiver('video', { direction: 'sendrecv' }); } catch (e) {}
+    }
+
+    // Force ALL transceivers to sendrecv so both sides exchange media
+    try {
+      peer.getTransceivers().forEach((transceiver) => {
+        if (transceiver.direction !== 'sendrecv' && transceiver.direction !== 'stopped') {
+          transceiver.direction = 'sendrecv';
+        }
+      });
+    } catch (e) {
+      console.warn('Could not set transceiver directions:', e);
+    }
 
     peer.ontrack = (event) => {
-      console.log(`📡 Received remote track from ${targetUserId}:`, event.track.kind);
-      if (event.streams && event.streams[0]) {
-        remoteStream.current = event.streams[0];
-        updateParticipantStream(targetUserId, event.streams[0]);
-      } else {
-        userStream.addTrack(event.track);
-        remoteStream.current = userStream;
-        updateParticipantStream(targetUserId, userStream);
+      console.log(`📡 Remote track received from ${targetUserId}:`, event.track.kind, event.track.id, 'readyState:', event.track.readyState);
+      setConnectionQuality('connected');
+
+      let userStream = remoteStreams.current.get(targetUserId);
+      if (!userStream) {
+        userStream = new MediaStream();
+        remoteStreams.current.set(targetUserId, userStream);
       }
-      attachRemoteStream();
+
+      // Add track to user stream if not already present
+      if (!userStream.getTracks().some(t => t.id === event.track.id)) {
+        userStream.addTrack(event.track);
+      }
+
+      // If browser provided a full MediaStream in event.streams[0], merge its tracks
+      if (event.streams && event.streams[0]) {
+        event.streams[0].getTracks().forEach((track) => {
+          if (!userStream!.getTracks().some((t) => t.id === track.id)) {
+            userStream!.addTrack(track);
+          }
+        });
+      }
+
+      remoteStream.current = userStream;
+      updateParticipantStream(targetUserId, userStream);
+
+      // Directly bind to remoteVideoRef for immediate playback (don't rely only on React state)
+      if (remoteVideoRef.current) {
+        if (remoteVideoRef.current.srcObject !== userStream) {
+          remoteVideoRef.current.srcObject = userStream;
+        }
+        remoteVideoRef.current.muted = false;
+        remoteVideoRef.current.play().catch(() => {});
+      }
+
+      // Retry binding after a short delay to handle React render timing
+      setTimeout(() => {
+        attachRemoteStream();
+      }, 200);
     };
 
     peer.onicecandidate = (event) => {
@@ -218,6 +318,7 @@ export function useWebRTC(currentUser: UserProfile | null) {
 
     // Track participant in state or update if name/avatar became available
     setParticipants((prev) => {
+      const existingStream = remoteStreams.current.get(targetUserId);
       const existingIndex = prev.findIndex((p) => p.id === targetUserId);
       if (existingIndex >= 0) {
         return prev.map((p) =>
@@ -226,7 +327,7 @@ export function useWebRTC(currentUser: UserProfile | null) {
                 ...p,
                 name: targetUserInfo?.name && targetUserInfo.name !== 'Participant' && targetUserInfo.name !== 'Group Member' ? targetUserInfo.name : p.name,
                 avatar: targetUserInfo?.avatar || p.avatar,
-                stream: userStream || p.stream,
+                stream: existingStream || p.stream,
               }
             : p
         );
@@ -237,7 +338,7 @@ export function useWebRTC(currentUser: UserProfile | null) {
           id: targetUserId,
           name: targetUserInfo?.name || 'Participant',
           avatar: targetUserInfo?.avatar,
-          stream: userStream,
+          stream: existingStream,
         },
       ];
     });
@@ -297,14 +398,22 @@ export function useWebRTC(currentUser: UserProfile | null) {
       clearCallTimeout();
       soundService.stopCallSounds();
       const signal = data.signal || data;
-      const fromId = data.from || callState.caller?.id;
+      // Use data.from first, then fall back to the latest callState via ref (avoids stale closure)
+      const fromId = data.from || callStateRef.current.caller?.id;
+
+      console.log('📞 Call accepted! fromId:', fromId, 'signal type:', signal?.type);
 
       if (fromId && signal?.type === 'answer') {
         const peer = peerConnections.current.get(fromId);
         if (peer) {
-          await peer.setRemoteDescription(new RTCSessionDescription(signal));
+          console.log('📞 Setting remote description (answer) on peer for:', fromId, 'signalingState:', peer.signalingState);
+          if (peer.signalingState === 'have-local-offer') {
+            await peer.setRemoteDescription(new RTCSessionDescription(signal));
+            console.log('✅ Remote description set successfully for:', fromId);
+          }
           // Flush any queued ICE candidates for this peer
           const queued = pendingIceCandidatesMap.current.get(fromId) || [];
+          console.log(`🧊 Flushing ${queued.length} queued ICE candidates for:`, fromId);
           for (const candidate of queued) {
             try {
               await peer.addIceCandidate(new RTCIceCandidate(candidate));
@@ -313,6 +422,8 @@ export function useWebRTC(currentUser: UserProfile | null) {
             }
           }
           pendingIceCandidatesMap.current.delete(fromId);
+        } else {
+          console.warn('⚠️ No peer connection found for fromId:', fromId, 'Available peers:', Array.from(peerConnections.current.keys()));
         }
       }
 
@@ -323,12 +434,13 @@ export function useWebRTC(currentUser: UserProfile | null) {
         startedAt: new Date(),
       }));
 
-      // Join the shared room for multi-participant updates
-      const roomId = callState.roomId || [currentUser._id, callState.caller?.id].sort().join('_');
+      // Join the shared room for multi-participant updates (use ref for latest state)
+      const latestState = callStateRef.current;
+      const roomId = latestState.roomId || [currentUser._id, latestState.caller?.id].sort().join('_');
       socket.emit('join_call_room', {
         roomId,
         user: { _id: currentUser._id, username: currentUser.username, avatar: currentUser.avatar },
-        isVideoCall: callState.isVideoCall,
+        isVideoCall: latestState.isVideoCall,
       });
 
       setTimeout(() => {
@@ -359,7 +471,8 @@ export function useWebRTC(currentUser: UserProfile | null) {
     };
 
     const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; from?: string }) => {
-      const fromId = data.from || callState.caller?.id;
+      // Use data.from first, then latest callState via ref (avoids stale closure)
+      const fromId = data.from || callStateRef.current.caller?.id;
       if (data?.candidate && fromId) {
         const peer = peerConnections.current.get(fromId);
         if (peer && peer.remoteDescription && peer.remoteDescription.type) {
@@ -382,7 +495,13 @@ export function useWebRTC(currentUser: UserProfile | null) {
       console.log('👤 Room participant joined:', data.user.username);
       if (!data.user || data.user._id === currentUser._id) return;
 
-      // Create an offer to the newly joined participant
+      // If we already have an established peer connection with this user, do not overwrite it
+      if (peerConnections.current.has(data.user._id)) {
+        console.log('ℹ️ Peer connection already exists for user:', data.user._id);
+        return;
+      }
+
+      // Create an offer to the newly joined participant (multi-user call scenario)
       const peer = createPeerConnection(data.user._id, {
         name: data.user.username,
         avatar: data.user.avatar,
@@ -390,7 +509,7 @@ export function useWebRTC(currentUser: UserProfile | null) {
 
       const offer = await peer.createOffer({
         offerToReceiveAudio: true,
-        offerToReceiveVideo: callState.isVideoCall,
+        offerToReceiveVideo: true,
       });
       await peer.setLocalDescription(offer);
 
@@ -425,7 +544,7 @@ export function useWebRTC(currentUser: UserProfile | null) {
         });
       } else if (signal.type === 'answer') {
         const peer = peerConnections.current.get(from._id);
-        if (peer) {
+        if (peer && peer.signalingState === 'have-local-offer') {
           await peer.setRemoteDescription(new RTCSessionDescription(signal));
         }
       }
@@ -610,12 +729,26 @@ export function useWebRTC(currentUser: UserProfile | null) {
     
     if ((window as any).incomingOffer) {
       await peer.setRemoteDescription(new RTCSessionDescription((window as any).incomingOffer));
+
+      // Force all transceivers to sendrecv before creating answer
+      try {
+        peer.getTransceivers().forEach((transceiver) => {
+          if (transceiver.direction !== 'sendrecv' && transceiver.direction !== 'stopped') {
+            transceiver.direction = 'sendrecv';
+          }
+        });
+      } catch (e) {
+        console.warn('Could not set transceiver directions in answerCall:', e);
+      }
+
       const answer = await peer.createAnswer();
       await peer.setLocalDescription(answer);
       
+      console.log('📞 Sending answer to caller:', callerId, 'from:', currentUser._id);
       const socket = getSocket();
       socket.emit('answer_call', {
         to: callerId,
+        from: currentUser._id,
         signal: answer,
       });
 
