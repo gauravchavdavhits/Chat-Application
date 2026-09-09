@@ -146,6 +146,10 @@
 [data-theme="light"] .message-input,
 [data-theme="light"] .sidebar-search-input {
   color: #0f172a;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 [data-theme="light"] .message-input::placeholder,
@@ -184,7 +188,7 @@
 }
 
 [data-theme="light"] .form-input,
-[data-theme="light"] input[type="text"],
+[data-theme="light"] input[type="text"]:not(.sidebar-search-input):not(.message-input),
 [data-theme="light"] input[type="email"],
 [data-theme="light"] input[type="password"] {
   background: #f8fafc;
@@ -193,7 +197,7 @@
 }
 
 [data-theme="light"] .form-input:focus,
-[data-theme="light"] input[type="text"]:focus,
+[data-theme="light"] input[type="text"]:not(.sidebar-search-input):not(.message-input):focus,
 [data-theme="light"] input[type="email"]:focus,
 [data-theme="light"] input[type="password"]:focus {
   border-color: var(--accent-color);
