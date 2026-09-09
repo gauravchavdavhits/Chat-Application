@@ -85,6 +85,10 @@ export function useWebRTC(currentUser: UserProfile | null) {
       remoteStream.current.getTracks().forEach((track) => track.stop());
       remoteStream.current = null;
     }
+    remoteStreams.current.forEach((st) => {
+      st.getTracks().forEach((t) => t.stop());
+    });
+    remoteStreams.current.clear();
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
     }
@@ -106,9 +110,9 @@ export function useWebRTC(currentUser: UserProfile | null) {
 
   const attachRemoteStream = () => {
     if (remoteVideoRef.current && remoteStream.current) {
-      if (remoteVideoRef.current.srcObject !== remoteStream.current) {
-        remoteVideoRef.current.srcObject = remoteStream.current;
-      }
+      // Always force-assign srcObject (don't skip with identity check —
+      // the browser may not re-evaluate tracks added to an existing stream)
+      remoteVideoRef.current.srcObject = remoteStream.current;
       remoteVideoRef.current.muted = false;
       const p = remoteVideoRef.current.play();
       if (p !== undefined) {
@@ -190,6 +194,10 @@ export function useWebRTC(currentUser: UserProfile | null) {
     if (peerConnections.current.has(targetUserId)) {
       peerConnections.current.get(targetUserId)?.close();
     }
+    if (remoteStreams.current.has(targetUserId)) {
+      remoteStreams.current.get(targetUserId)?.getTracks().forEach(t => t.stop());
+      remoteStreams.current.delete(targetUserId);
+    }
 
     const peer = new RTCPeerConnection({
       iceServers: [
@@ -243,39 +251,58 @@ export function useWebRTC(currentUser: UserProfile | null) {
       let userStream = remoteStreams.current.get(targetUserId);
       if (!userStream) {
         userStream = new MediaStream();
-        remoteStreams.current.set(targetUserId, userStream);
       }
 
-      // Add track to user stream if not already present
+      // Remove any ended tracks or old same-kind tracks to prevent black screen
+      userStream.getTracks().forEach((t) => {
+        if (t.readyState === 'ended' || (t.kind === event.track.kind && t.id !== event.track.id)) {
+          userStream!.removeTrack(t);
+        }
+      });
+
+      // Add the new track
       if (!userStream.getTracks().some(t => t.id === event.track.id)) {
         userStream.addTrack(event.track);
       }
 
-      // If browser provided a full MediaStream in event.streams[0], merge its tracks
+      // Merge other live tracks from event.streams[0] if provided
       if (event.streams && event.streams[0]) {
         event.streams[0].getTracks().forEach((track) => {
-          if (!userStream!.getTracks().some((t) => t.id === track.id)) {
+          if (track.readyState === 'live' && !userStream!.getTracks().some((t) => t.id === track.id)) {
+            userStream!.getTracks().forEach((oldT) => {
+              if (oldT.kind === track.kind && oldT.id !== track.id) {
+                userStream!.removeTrack(oldT);
+              }
+            });
             userStream!.addTrack(track);
           }
         });
       }
 
-      remoteStream.current = userStream;
-      updateParticipantStream(targetUserId, userStream);
+      // Clean stream containing exclusively live tracks
+      const cleanStream = new MediaStream(userStream.getTracks().filter((t) => t.readyState === 'live'));
 
-      // Directly bind to remoteVideoRef for immediate playback (don't rely only on React state)
-      if (remoteVideoRef.current) {
-        if (remoteVideoRef.current.srcObject !== userStream) {
-          remoteVideoRef.current.srcObject = userStream;
+      remoteStreams.current.set(targetUserId, cleanStream);
+      remoteStream.current = cleanStream;
+      updateParticipantStream(targetUserId, cleanStream);
+
+      // Directly bind cleanStream to remoteVideoRef for immediate playback
+      const bindStream = () => {
+        if (remoteVideoRef.current && cleanStream.getTracks().length > 0) {
+          remoteVideoRef.current.srcObject = cleanStream;
+          remoteVideoRef.current.muted = false;
+          remoteVideoRef.current.play().catch(() => {});
+          console.log('🎬 Bound clean remote stream to video element, tracks:', cleanStream.getTracks().map(t => `${t.kind}:${t.readyState}`).join(', '));
         }
-        remoteVideoRef.current.muted = false;
-        remoteVideoRef.current.play().catch(() => {});
-      }
+      };
 
-      // Retry binding after a short delay to handle React render timing
-      setTimeout(() => {
-        attachRemoteStream();
-      }, 200);
+      // Try immediately and retry
+      bindStream();
+      setTimeout(bindStream, 100);
+      setTimeout(bindStream, 300);
+      setTimeout(bindStream, 600);
+      setTimeout(bindStream, 1200);
+      setTimeout(bindStream, 2500);
     };
 
     peer.onicecandidate = (event) => {

@@ -121,6 +121,25 @@ export const CallModal: React.FC<CallModalProps> = ({
     };
   }, []);
 
+  // Sync stream to remoteVideoRef whenever participants or call status change
+  useEffect(() => {
+    if (callState.callAccepted || callState.isCalling) {
+      if (remoteVideoRef.current) {
+        const stream = participants[0]?.stream;
+        if (stream && remoteVideoRef.current.srcObject !== stream) {
+          remoteVideoRef.current.srcObject = stream;
+        }
+        if (remoteVideoRef.current.srcObject) {
+          remoteVideoRef.current.muted = false;
+          remoteVideoRef.current.play().catch(() => {});
+        }
+      }
+      if (localVideoRef.current && localVideoRef.current.srcObject) {
+        localVideoRef.current.play().catch(() => {});
+      }
+    }
+  }, [participants, callState.callAccepted, callState.isCalling, callState.isVideoCall, remoteVideoRef, localVideoRef]);
+
   const loadDevices = async () => {
     try {
       if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -239,24 +258,22 @@ export const CallModal: React.FC<CallModalProps> = ({
   useEffect(() => {
     if (callState.callAccepted) {
       const activeStream = participants[0]?.stream;
-      if (activeStream) {
-        // For video calls, bind to video element
-        if (callState.isVideoCall && remoteVideoRef.current) {
-          if (remoteVideoRef.current.srcObject !== activeStream) {
-            remoteVideoRef.current.srcObject = activeStream;
-            remoteVideoRef.current.muted = false;
-            remoteVideoRef.current.play().catch(() => {});
-          }
-        }
-        // For audio calls, also ensure the audio element has the stream
-        if (!callState.isVideoCall && remoteVideoRef.current) {
-          if (remoteVideoRef.current.srcObject !== activeStream) {
-            remoteVideoRef.current.srcObject = activeStream;
-            remoteVideoRef.current.muted = false;
-            remoteVideoRef.current.play().catch(() => {});
-          }
-        }
+      if (activeStream && remoteVideoRef.current) {
+        // Always force-assign srcObject (browser needs this to pick up new tracks)
+        remoteVideoRef.current.srcObject = activeStream;
+        remoteVideoRef.current.muted = false;
+        remoteVideoRef.current.play().catch(() => {});
       }
+      // Delayed retry in case the video element wasn't ready on first pass
+      const timer = setTimeout(() => {
+        const stream = participants[0]?.stream;
+        if (stream && remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = stream;
+          remoteVideoRef.current.muted = false;
+          remoteVideoRef.current.play().catch(() => {});
+        }
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [participants, callState.callAccepted, callState.isVideoCall, remoteVideoRef]);
 
@@ -425,14 +442,11 @@ export const CallModal: React.FC<CallModalProps> = ({
                 {/* Main Remote Video */}
                 <video
                   playsInline
-                  ref={(el) => {
-                    (remoteVideoRef as any).current = el;
-                    if (el && participants[0]?.stream && el.srcObject !== participants[0].stream) {
-                      el.srcObject = participants[0].stream;
-                      el.play().catch(() => {});
-                    }
-                  }}
+                  ref={remoteVideoRef}
                   autoPlay
+                  onLoadedMetadata={(e) => {
+                    (e.currentTarget as HTMLVideoElement).play().catch(() => {});
+                  }}
                   className="remote-video"
                 />
 
@@ -466,6 +480,9 @@ export const CallModal: React.FC<CallModalProps> = ({
                   muted
                   ref={localVideoRef}
                   autoPlay
+                  onLoadedMetadata={(e) => {
+                    (e.currentTarget as HTMLVideoElement).play().catch(() => {});
+                  }}
                   className={`local-video ${localVideoOff ? 'hidden' : ''}`}
                 />
               </div>
