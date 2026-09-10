@@ -28,48 +28,21 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       username: username.trim(),
       email: email.toLowerCase().trim(),
       password,
-      isOnline: true,
+      isOnline: false,
     });
 
-    const tokenPayload = {
-      userId: user._id.toString(),
-      email: user.email,
-      username: user.username,
-    };
-
-    const accessToken = generateAccessToken(tokenPayload);
-    const refreshToken = generateRefreshToken(tokenPayload);
-
-    // Set Access Token cookie
-    res.cookie('auth_token', accessToken, {
-      httpOnly: false,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 15 * 60 * 1000, // 15 minutes
-      path: '/',
-    });
-
-    // Set Refresh Token cookie
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: false,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/',
-    });
-
-    sendSuccess(res, {
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      isOnline: user.isOnline,
-      avatar: user.avatar,
-      settings: user.settings,
-    }, 'Registration successful', HttpStatus.CREATED, {
-      token: accessToken,
-      accessToken,
-      refreshToken,
-    });
+    sendSuccess(
+      res,
+      {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        isEmailVerified: user.isEmailVerified,
+        createdAt: user.createdAt,
+      },
+      'Registration successful. Please sign in.',
+      HttpStatus.CREATED
+    );
   } catch (error: any) {
     sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }

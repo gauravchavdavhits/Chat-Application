@@ -24,7 +24,7 @@ const options: Options = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
-          description: 'Enter your JWT access token below (e.g. obtained from /api/auth/login or /api/auth/register)',
+          description: 'Enter your JWT access token below (obtained from /api/auth/login)',
         },
       },
     },
