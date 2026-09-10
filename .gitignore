@@ -10,15 +10,15 @@ node_modules/
 dist/
 build/
 
-# Logs
-*.log
-npm-debug.log*
-
-# Uploads runtime files & user media
+# Uploads runtime files & attachments (ignore all uploaded files but keep directory)
 uploads/*
 !uploads/.gitkeep
 uploads/screenshots/*
 !uploads/screenshots/.gitkeep
+
+# Ignore root-level or nested uploads
+**/uploads/*
+!**/uploads/.gitkeep
 
 # Editor & OS Metadata
 .DS_Store

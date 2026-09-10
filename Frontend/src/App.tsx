@@ -211,12 +211,27 @@ export default function App() {
     const socket = getSocket();
     if (socket) {
       const handleHistoryUpdate = () => setNewCallHistoryTrigger(prev => prev + 1);
+      const handleUserUpdated = (data: { userId: string; user: UserProfile }) => {
+        if (!data || !data.user) return;
+        // If current logged in user's profile was updated
+        if (currentUser && data.userId === currentUser._id) {
+          handleUpdateCurrentUser(data.user);
+        }
+        // If selected friend's profile was updated
+        if (selectedFriend && data.userId === selectedFriend._id) {
+          setSelectedFriend(data.user);
+          localStorage.setItem('selected_friend', JSON.stringify(data.user));
+        }
+      };
+
       socket.on('call_history_updated', handleHistoryUpdate);
+      socket.on('user_updated', handleUserUpdated);
       return () => {
         socket.off('call_history_updated', handleHistoryUpdate);
+        socket.off('user_updated', handleUserUpdated);
       };
     }
-  }, []);
+  }, [currentUser?._id, selectedFriend?._id]);
 
   // Apply settings dynamically (theme mode, theme color, font size)
   useEffect(() => {

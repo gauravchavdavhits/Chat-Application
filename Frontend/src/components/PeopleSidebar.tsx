@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserProfile } from '../types/chat.types';
 import { getAllUsersApi, searchUsersApi } from '../services/userService';
+import { getSocket } from '../services/socket';
 
 interface PeopleSidebarProps {
   currentUser: UserProfile;
@@ -22,7 +23,8 @@ export function PeopleSidebar({
       setLoading(true);
       const res = await getAllUsersApi();
       if (res && res.success && Array.isArray(res.data)) {
-        const filtered = res.data.filter((u) => u._id !== currentUser._id);
+        const currentId = String(currentUser?._id || '');
+        const filtered = res.data.filter((u) => String(u._id) !== currentId);
         setUsers(filtered);
       }
     } catch (err) {
@@ -34,6 +36,15 @@ export function PeopleSidebar({
 
   useEffect(() => {
     fetchAllUsers();
+
+    const socket = getSocket();
+    if (socket) {
+      const handleUserUpdated = () => fetchAllUsers();
+      socket.on('user_updated', handleUserUpdated);
+      return () => {
+        socket.off('user_updated', handleUserUpdated);
+      };
+    }
   }, [currentUser._id]);
 
   // Handle Search Input with debounce
@@ -49,7 +60,8 @@ export function PeopleSidebar({
       setLoading(true);
       const res = await searchUsersApi(query.trim());
       if (res && res.success && Array.isArray(res.data)) {
-        const filtered = res.data.filter((u) => u._id !== currentUser._id);
+        const currentId = String(currentUser?._id || '');
+        const filtered = res.data.filter((u) => String(u._id) !== currentId);
         setUsers(filtered);
       }
       setLoading(false);
@@ -136,7 +148,7 @@ export function PeopleSidebar({
           </div>
         ) : (
           users.map((friend) => {
-            const isOnline = onlineUserIds.includes(friend._id);
+            const isOnline = onlineUserIds.some((id) => String(id) === String(friend._id));
 
             return (
               <div

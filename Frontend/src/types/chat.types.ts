@@ -153,6 +153,7 @@ export interface ServerToClientEvents {
   receive_message: (data: ChatMessage) => void;
   online_users_update: (userIds: string[]) => void;
   user_status_changed: (data: { userId: string; isOnline: boolean }) => void;
+  user_updated: (data: { userId: string; user: UserProfile }) => void;
   user_typing: (data: { conversationId: string; senderId: string; senderName: string }) => void;
   user_stop_typing: (data: { conversationId: string; senderId: string }) => void;
   call_user: (data: { signal: any; from: string; name: string; avatar?: string; isVideoCall: boolean; callRoomId?: string }) => void;

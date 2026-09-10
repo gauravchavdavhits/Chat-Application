@@ -87,10 +87,15 @@ export function SettingsView({ currentUser, onUpdateUser, onLogout, initialCateg
   const [settings, setSettings] = useState<UserSettings>(currentUser.settings || defaultSettings);
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setAvatarLoadError(false);
+  }, [currentUser.avatar]);
 
   const [usernameInput, setUsernameInput] = useState(currentUser.username || '');
   const [emailInput, setEmailInput] = useState(currentUser.email || '');
@@ -442,20 +447,12 @@ export function SettingsView({ currentUser, onUpdateUser, onLogout, initialCateg
                       boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
                       position: 'relative',
                     }}>
-                      {currentUser.avatar ? (
+                      {currentUser.avatar && !avatarLoadError ? (
                         <img 
                           src={currentUser.avatar} 
                           alt="Profile" 
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                          onError={(e) => {
-                            (e.currentTarget as HTMLElement).style.display = 'none';
-                            if (e.currentTarget.parentElement) {
-                              const fallback = document.createElement('span');
-                              fallback.style.cssText = 'color: #fff; font-size: 34px; font-weight: bold;';
-                              fallback.innerText = currentUser.username.charAt(0).toUpperCase();
-                              e.currentTarget.parentElement.appendChild(fallback);
-                            }
-                          }}
+                          onError={() => setAvatarLoadError(true)}
                         />
                       ) : (
                         <span style={{ color: '#fff', fontSize: '34px', fontWeight: 'bold' }}>{currentUser.username.charAt(0).toUpperCase()}</span>

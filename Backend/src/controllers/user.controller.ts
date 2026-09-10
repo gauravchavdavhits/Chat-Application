@@ -6,6 +6,7 @@ import { CallModel } from '../models/call.model';
 import { redisCache } from '../config/redis';
 import { HttpStatus } from '../constants/httpStatus';
 import { sendSuccess, sendError } from '../utils/response';
+import { getSocketIO } from '../sockets/chat.socket';
 
 // Get user by ID
 export const getUserById = async (req: Request, res: Response): Promise<void> => {
@@ -111,6 +112,15 @@ export const updateAvatar = async (req: Request, res: Response): Promise<void> =
     // Invalidate Redis user cache
     await redisCache.del(`user:${userId}`);
     await redisCache.del('users:all');
+
+    // Broadcast real-time user avatar update to all connected sockets
+    const io = getSocketIO();
+    if (io) {
+      io.emit('user_updated', {
+        userId: user._id.toString(),
+        user,
+      });
+    }
 
     sendSuccess(res, user, undefined, HttpStatus.OK);
   } catch (error: any) {

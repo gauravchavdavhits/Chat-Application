@@ -64,9 +64,14 @@ export function ChatsSidebar({
       const handleConversationCleared = () => {
         fetchRecentChats();
       };
+      const handleUserUpdated = () => {
+        fetchRecentChats();
+      };
       socket.on('conversation_cleared', handleConversationCleared);
+      socket.on('user_updated', handleUserUpdated);
       return () => {
         socket.off('conversation_cleared', handleConversationCleared);
+        socket.off('user_updated', handleUserUpdated);
       };
     }
   }, [currentUser._id]);
@@ -91,8 +96,8 @@ export function ChatsSidebar({
         ) : (
           recentChats.map((chat) => {
             const friend = chat.user;
-            const isSelected = selectedFriend?._id === friend._id;
-            const isOnline = onlineUserIds.includes(friend._id);
+            const isSelected = String(selectedFriend?._id) === String(friend._id);
+            const isOnline = onlineUserIds.some((id) => String(id) === String(friend._id));
 
             return (
               <div

@@ -37,6 +37,7 @@ export interface ServerToClientEvents {
   message_edited: (data: ChatMessage) => void;
   message_deleted: (data: { messageId: string; conversationId: string }) => void;
   message_reaction_updated: (data: { messageId: string; conversationId: string; reactions: { [emoji: string]: string[] } }) => void;
+  user_updated: (data: { userId: string; user: any }) => void;
 }
 
 // Client to Server Events Protocol

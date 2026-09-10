@@ -75,7 +75,7 @@ export function UnifiedPicker({ onEmojiSelect, onGifSelect, disabled = false }: 
               <Picker data={data} onEmojiSelect={handleEmojiClick} theme="dark" />
             ) : (
               <GifPicker 
-                provider={Giphy(import.meta.env.VITE_GIPHY_API_KEY || "")} 
+                provider={Giphy(import.meta.env.VITE_GIPHY_API_KEY || 'OGAgm85sj2fgG3UgIL7rV93tjhcQB0lG')} 
                 onGifClick={handleGifClick} 
                 theme={Theme.DARK} 
               />

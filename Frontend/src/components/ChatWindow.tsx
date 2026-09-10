@@ -132,7 +132,7 @@ export function ChatWindow({ currentUser, selectedTarget, messages, callRecords 
                   {'members' in selectedTarget ? (
                     `${selectedTarget.members.length} members`
                   ) : (
-                    onlineUserIds.includes(selectedTarget._id) ? 'Online' : 'Offline'
+                    onlineUserIds.some((id) => String(id) === String(selectedTarget._id)) ? 'Online' : 'Offline'
                   )}
                 </div>
               </div>
