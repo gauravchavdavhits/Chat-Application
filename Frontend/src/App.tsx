@@ -13,7 +13,7 @@ import { CreateGroupModal } from './components/CreateGroupModal';
 import { GroupDetailsModal } from './components/GroupDetailsModal';
 import { CallsPlaceholder } from './components/Placeholders';
 import { CallsSidebar } from './components/CallsSidebar';
-import { SettingsView } from './components/SettingsView';
+import { SettingsView, SettingsCategory } from './components/SettingsView';
 import { LiveMonitoringView } from './components/LiveMonitoringView';
 import { ScreenShareConsentModal } from './components/ScreenShareConsentModal';
 import { useMonitoringStreamer } from './hooks/useMonitoringStreamer';
@@ -23,6 +23,7 @@ import './App.css';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('chats');
+  const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>('profile');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     const saved = localStorage.getItem('chat_user');
     return saved ? JSON.parse(saved) : null;
@@ -255,7 +256,16 @@ export default function App() {
     <div className="app-layout">
       <MainNavBar 
         activeTab={activeTab} 
-        onTabChange={setActiveTab} 
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          if (tab === 'settings') {
+            setSettingsCategory('appearance');
+          }
+        }} 
+        onProfileClick={() => {
+          setSettingsCategory('profile');
+          setActiveTab('settings');
+        }}
         currentUser={currentUser} 
       />
 
@@ -416,6 +426,7 @@ export default function App() {
           currentUser={currentUser} 
           onUpdateUser={handleUpdateCurrentUser} 
           onLogout={handleLogout} 
+          initialCategory={settingsCategory}
         />
       )}
 

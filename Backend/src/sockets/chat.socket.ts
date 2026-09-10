@@ -3,6 +3,7 @@ import { MessageModel } from '../models/message.model';
 import { CallModel } from '../models/call.model';
 import { UserModel } from '../models/user.model';
 import { logger } from '../utils/logger';
+import { deleteUploadedFile } from '../utils/file.util';
 
 let socketIOInstance: Server | null = null;
 
@@ -244,6 +245,12 @@ export const registerChatSocket = (io: Server): void => {
           });
           socket.emit('message_deleted', { messageId, conversationId, deletedForMe: true });
         } else if (type === 'everyone') {
+          // Fetch existing message to check if it has an uploaded file attachment
+          const existingMsg = await MessageModel.findById(messageId);
+          if (existingMsg && existingMsg.fileUrl) {
+            deleteUploadedFile(existingMsg.fileUrl);
+          }
+
           const updatedMsg = await MessageModel.findByIdAndUpdate(messageId, {
             isDeletedForEveryone: true,
             message: '',

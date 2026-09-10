@@ -108,7 +108,17 @@ export function ChatWindow({ currentUser, selectedTarget, messages, callRecords 
             <>
               <div className="chat-friend-avatar">
                 {selectedTarget.avatar ? (
-                  <img src={selectedTarget.avatar} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                  <img 
+                    src={selectedTarget.avatar} 
+                    alt="Avatar" 
+                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                      if (e.currentTarget.parentElement) {
+                        e.currentTarget.parentElement.innerText = ('username' in selectedTarget ? selectedTarget.username : selectedTarget.name).charAt(0).toUpperCase();
+                      }
+                    }}
+                  />
                 ) : (
                   ('username' in selectedTarget ? selectedTarget.username : selectedTarget.name).charAt(0).toUpperCase()
                 )}

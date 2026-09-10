@@ -104,13 +104,35 @@ export function PeopleSidebar({
       <div className="friends-list">
         <div className="friends-list-title">
           <span>ALL USERS</span>
+          <button 
+            type="button" 
+            className="refresh-users-btn" 
+            onClick={fetchAllUsers} 
+            title="Refresh Users"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+          </button>
         </div>
 
         {loading ? (
           <div className="loading-text">Loading users...</div>
         ) : users.length === 0 ? (
-          <div className="no-users-text">
-            {searchQuery.trim() ? "No users found. Try another username!" : "No registered users found."}
+          <div className="no-users-text" style={{ padding: '2rem 1.5rem', lineHeight: '1.6' }}>
+            <div style={{ marginBottom: '8px', fontSize: '1.5rem' }}>👥</div>
+            {searchQuery.trim() ? (
+              "No users found matching your search. Try another username!"
+            ) : (
+              <div>
+                <strong>No other users yet</strong>
+                <p style={{ margin: '6px 0 0', fontSize: '0.78rem', opacity: 0.8 }}>
+                  When other people register and join the app, they will appear here automatically.
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           users.map((friend) => {
@@ -124,7 +146,17 @@ export function PeopleSidebar({
               >
                 <div className="friend-avatar">
                   {friend.avatar ? (
-                    <img src={friend.avatar} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    <img 
+                      src={friend.avatar} 
+                      alt="Avatar" 
+                      style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = 'none';
+                        if (e.currentTarget.parentElement) {
+                          e.currentTarget.parentElement.innerText = friend.username.charAt(0).toUpperCase();
+                        }
+                      }}
+                    />
                   ) : (
                     friend.username.charAt(0).toUpperCase()
                   )}

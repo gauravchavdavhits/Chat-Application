@@ -102,7 +102,17 @@ export function ChatsSidebar({
               >
                 <div className="friend-avatar">
                   {friend.avatar ? (
-                    <img src={friend.avatar} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    <img 
+                      src={friend.avatar} 
+                      alt="Avatar" 
+                      style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = 'none';
+                        if (e.currentTarget.parentElement) {
+                          e.currentTarget.parentElement.innerText = friend.username.charAt(0).toUpperCase();
+                        }
+                      }}
+                    />
                   ) : (
                     friend.username.charAt(0).toUpperCase()
                   )}

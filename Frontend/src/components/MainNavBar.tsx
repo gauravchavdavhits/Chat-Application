@@ -6,10 +6,16 @@ export type TabType = 'chats' | 'people' | 'groups' | 'calls' | 'monitoring' | '
 interface MainNavBarProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
+  onProfileClick?: () => void;
   currentUser: UserProfile;
 }
 
-export const MainNavBar: React.FC<MainNavBarProps> = ({ activeTab, onTabChange, currentUser }) => {
+export const MainNavBar: React.FC<MainNavBarProps> = ({ activeTab, onTabChange, onProfileClick, currentUser }) => {
+  const [avatarError, setAvatarError] = React.useState(false);
+
+  React.useEffect(() => {
+    setAvatarError(false);
+  }, [currentUser.avatar]);
   return (
     <div className="main-nav-bar">
       <div className="nav-top">
@@ -86,9 +92,25 @@ export const MainNavBar: React.FC<MainNavBarProps> = ({ activeTab, onTabChange, 
       </div>
 
       <div className="nav-bottom">
-        <div className="nav-avatar" title={currentUser.username}>
-          {currentUser.avatar ? (
-            <img src={currentUser.avatar} alt="Profile" />
+        <div 
+          className={`nav-avatar ${activeTab === 'settings' ? 'active-profile' : ''}`} 
+          title={`Profile (${currentUser.username})`}
+          onClick={() => {
+            if (onProfileClick) {
+              onProfileClick();
+            } else {
+              onTabChange('settings');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+        >
+          {currentUser.avatar && !avatarError ? (
+            <img 
+              src={currentUser.avatar} 
+              alt="Profile" 
+              onError={() => setAvatarError(true)} 
+            />
           ) : (
             <div className="avatar-placeholder">
               {currentUser.username.charAt(0).toUpperCase()}

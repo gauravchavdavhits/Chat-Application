@@ -3,23 +3,13 @@ import path from 'path';
 import fs from 'fs';
 
 // Ensure uploads directory exists
-const uploadDir = path.join(process.cwd(), 'uploads');
+export const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Configure Storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename to prevent overwriting
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-  },
-});
+// Memory storage allows us to inspect and compress images with Sharp before saving to disk
+const storage = multer.memoryStorage();
 
 // Allowed MIME types
 const ALLOWED_MIME_TYPES = [
@@ -53,7 +43,7 @@ const ALLOWED_MIME_TYPES = [
 export const upload = multer({
   storage,
   limits: {
-    fileSize: 15 * 1024 * 1024, // 15 MB max limit
+    fileSize: 25 * 1024 * 1024, // 25 MB max limit to allow raw high-res camera photos
     files: 1,
   },
   fileFilter: (req, file, cb) => {
@@ -64,4 +54,3 @@ export const upload = multer({
     }
   },
 });
-

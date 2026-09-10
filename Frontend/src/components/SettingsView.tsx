@@ -5,13 +5,14 @@ import { uploadFileApi, updateAvatarApi, updateProfileApi, sendEmailOtpApi, veri
 import { ConfirmModal } from './ConfirmModal';
 import { CustomSelect } from './CustomSelect';
 
+export type SettingsCategory = 'profile' | 'privacy' | 'notifications' | 'appearance' | 'chat' | 'other';
+
 interface SettingsViewProps {
   currentUser: UserProfile;
   onUpdateUser: (user: UserProfile) => void;
   onLogout: () => void;
+  initialCategory?: SettingsCategory;
 }
-
-type SettingsCategory = 'profile' | 'privacy' | 'notifications' | 'appearance' | 'chat' | 'other';
 
 const defaultSettings: UserSettings = {
   privacy: { onlineVisibility: 'everyone', lastSeenVisibility: 'everyone', readReceipts: true, blockedUsers: [] },
@@ -75,8 +76,14 @@ const iconBoxStyle: React.CSSProperties = {
 
 /* ── Main Component ───────────────────────────────────────────────── */
 
-export function SettingsView({ currentUser, onUpdateUser, onLogout }: SettingsViewProps) {
-  const [activeCategory, setActiveCategory] = useState<SettingsCategory>('profile');
+export function SettingsView({ currentUser, onUpdateUser, onLogout, initialCategory = 'profile' }: SettingsViewProps) {
+  const [activeCategory, setActiveCategory] = useState<SettingsCategory>(initialCategory);
+
+  useEffect(() => {
+    if (initialCategory) {
+      setActiveCategory(initialCategory);
+    }
+  }, [initialCategory]);
   const [settings, setSettings] = useState<UserSettings>(currentUser.settings || defaultSettings);
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -436,7 +443,20 @@ export function SettingsView({ currentUser, onUpdateUser, onLogout }: SettingsVi
                       position: 'relative',
                     }}>
                       {currentUser.avatar ? (
-                        <img src={currentUser.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img 
+                          src={currentUser.avatar} 
+                          alt="Profile" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display = 'none';
+                            if (e.currentTarget.parentElement) {
+                              const fallback = document.createElement('span');
+                              fallback.style.cssText = 'color: #fff; font-size: 34px; font-weight: bold;';
+                              fallback.innerText = currentUser.username.charAt(0).toUpperCase();
+                              e.currentTarget.parentElement.appendChild(fallback);
+                            }
+                          }}
+                        />
                       ) : (
                         <span style={{ color: '#fff', fontSize: '34px', fontWeight: 'bold' }}>{currentUser.username.charAt(0).toUpperCase()}</span>
                       )}
