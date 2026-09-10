@@ -8,6 +8,8 @@ import app from './app';
 import { config } from './config';
 import { registerChatSocket } from './sockets/chat.socket';
 import { ClientToServerEvents, ServerToClientEvents } from './types/chat.types';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { redisPubClient, redisSubClient } from './config/redis';
 
 // Create HTTP server using createServer(app)
 const httpServer = createServer(app);
@@ -20,6 +22,16 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
     credentials: true,
   },
 });
+
+// Attach Redis adapter if Redis Pub/Sub is active
+if (redisPubClient && redisSubClient) {
+  try {
+    io.adapter(createAdapter(redisPubClient, redisSubClient));
+    logger.info('🔌 Socket.IO Redis Adapter activated for multi-instance horizontal scaling');
+  } catch (err: any) {
+    logger.warn(`Failed to bind Socket.IO Redis adapter: ${err.message}`);
+  }
+}
 
 // Register Socket event listeners
 registerChatSocket(io);

@@ -5,7 +5,7 @@ import { MessageModel } from '../models/message.model';
 export const updateSettings = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
-    const { settings } = req.body;
+    const settings = req.body.settings || req.body;
 
     const user = await UserModel.findByIdAndUpdate(
       userId,

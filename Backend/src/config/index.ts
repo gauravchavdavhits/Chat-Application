@@ -11,6 +11,8 @@ export const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'bidirectional_refresh_super_secret_key_2026',
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+  redisUri: process.env.REDIS_URI || 'redis://localhost:6379',
+  redisEnabled: process.env.REDIS_ENABLED === 'true' || false,
   email: {
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.EMAIL_PORT || '587', 10),

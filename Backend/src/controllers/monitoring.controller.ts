@@ -8,10 +8,15 @@ import { logger } from '../utils/logger';
 // Upload Base64 or Binary Screenshot
 export const saveScreenshot = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { targetUserId, targetUsername, capturedBy, capturedByName, base64Image, captureType, intervalSeconds } = req.body;
+    const targetUserId = req.body.targetUserId || (req as any).user?.userId;
+    const targetUsername = req.body.targetUsername || (req as any).user?.username || 'User';
+    const capturedBy = req.body.capturedBy || (req as any).user?.userId;
+    const capturedByName = req.body.capturedByName || (req as any).user?.username || 'Admin';
+    const base64Image = req.body.base64Image || req.body.image;
+    const { captureType, intervalSeconds } = req.body;
 
     if (!targetUserId || !base64Image) {
-      res.status(400).json({ success: false, message: 'Target userId and base64Image are required' });
+      res.status(400).json({ success: false, message: 'targetUserId and base64Image (or image) are required' });
       return;
     }
 

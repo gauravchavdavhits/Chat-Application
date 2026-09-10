@@ -948,6 +948,54 @@ export function SettingsView({ currentUser, onUpdateUser, onLogout }: SettingsVi
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </div>
 
+              {/* Swagger API Documentation Link */}
+              <a
+                href="http://localhost:5000/api-docs"
+                target="_blank"
+                rel="noreferrer noopener"
+                style={{
+                  ...cardStyle,
+                  padding: '24px',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.05))',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.borderColor = 'var(--accent-color, #6366f1)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(99, 102, 241, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.04)';
+                }}
+              >
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flex: 1 }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                      <polyline points="2 17 12 22 22 17"></polyline>
+                      <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: 'var(--text-main)' }}>REST API Documentation</h4>
+                      <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '2px 7px', borderRadius: '6px', fontWeight: '700' }}>Swagger UI</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>Interactive OpenAPI console to test endpoints live</p>
+                  </div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color, #6366f1)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+              </a>
+
               {/* Logout */}
               <div style={{ marginTop: '16px' }}>
                 <button

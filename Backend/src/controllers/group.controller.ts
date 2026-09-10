@@ -11,10 +11,12 @@ import { getSocketIO } from '../sockets/chat.socket';
 // @access  Public
 export const createGroup = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, avatar, adminId, members } = req.body;
+    const adminId = req.body.adminId || (req as any).user?.userId;
+    const { name, avatar } = req.body;
+    const members = req.body.members || [];
 
-    if (!name || !adminId || !members || !Array.isArray(members)) {
-      res.status(400).json({ success: false, message: 'Missing required fields' });
+    if (!name || !adminId) {
+      res.status(400).json({ success: false, message: 'Group name and adminId are required' });
       return;
     }
 
@@ -83,13 +85,14 @@ export const getUserGroups = async (req: Request, res: Response): Promise<void> 
   }
 };
 
-// @desc    Update group (add/remove members, change name/avatar)
+// @desc    Update a group (name, avatar, members)
 // @route   PUT /api/groups/:groupId
 // @access  Public
 export const updateGroup = async (req: Request, res: Response): Promise<void> => {
   try {
     const { groupId } = req.params;
-    const { name, avatar, members, adminId } = req.body; // adminId passed to verify permissions
+    const adminId = req.body.adminId || (req as any).user?.userId;
+    const { name, avatar, members } = req.body;
 
     const group = await GroupModel.findById(groupId);
     if (!group) {
@@ -97,7 +100,7 @@ export const updateGroup = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    if (group.adminId !== adminId) {
+    if (adminId && group.adminId !== adminId) {
       res.status(403).json({ success: false, message: 'Only admin can update the group' });
       return;
     }
@@ -126,7 +129,7 @@ export const updateGroup = async (req: Request, res: Response): Promise<void> =>
 export const leaveGroup = async (req: Request, res: Response): Promise<void> => {
   try {
     const { groupId } = req.params;
-    const { userId } = req.body;
+    const userId = req.body.userId || (req as any).user?.userId;
 
     if (!userId) {
       res.status(400).json({ success: false, message: 'UserId is required' });

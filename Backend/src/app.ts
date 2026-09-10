@@ -15,6 +15,8 @@ import callRoutes from './routes/call.routes';
 import settingsRoutes from './routes/settings.routes';
 import monitoringRoutes from './routes/monitoring.routes';
 import { logger } from './utils/logger';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 
 // Connect MongoDB Database
 connectDB();
@@ -58,6 +60,12 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Backend server is running securely' });
 });
+
+// Swagger API Documentation UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  explorer: true,
+  customSiteTitle: 'Chat Application API Docs',
+}));
 
 // API Routes
 app.use('/api/auth', authRoutes);
