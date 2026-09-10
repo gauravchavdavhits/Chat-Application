@@ -231,9 +231,12 @@ export default function App() {
       root.setAttribute('data-theme', mode);
     }
 
-    // 2. Accent color
+    // 2. Accent color & gradient dynamic update
     if (settings?.appearance?.themeColor) {
-      root.style.setProperty('--accent-color', settings.appearance.themeColor);
+      const color = settings.appearance.themeColor;
+      root.style.setProperty('--accent-color', color);
+      root.style.setProperty('--accent-gradient', `linear-gradient(135deg, ${color} 0%, #8b5cf6 50%, #ec4899 100%)`);
+      root.style.setProperty('--own-bubble', `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`);
     }
     
     // 3. Font size

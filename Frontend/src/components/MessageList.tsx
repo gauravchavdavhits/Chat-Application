@@ -23,12 +23,41 @@ type TimelineItem =
   | { type: 'call'; data: CallRecord; timestamp: Date };
 
 const ImageAttachment = ({ url, alt }: { url: string; alt: string; isOwn?: boolean; msgId?: string }) => {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return (
+      <div 
+        className="attachment-fallback"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '10px 14px',
+          background: 'rgba(255, 255, 255, 0.08)',
+          borderRadius: '10px',
+          fontSize: '0.85rem',
+          color: 'var(--text-muted, #94a3b8)',
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+          <line x1="2" y1="2" x2="22" y2="22" stroke="#ef4444" />
+        </svg>
+        <span>Image unavailable ({alt || 'Attachment'})</span>
+      </div>
+    );
+  }
+
   return (
     <img
       src={url}
       alt={alt || 'Image'}
       className="attachment-image"
       loading="lazy"
+      onError={() => setHasError(true)}
       onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
       style={{ cursor: 'pointer', display: 'block', maxWidth: '100%', maxHeight: '320px', borderRadius: '12px', objectFit: 'contain' }}
     />

@@ -782,35 +782,52 @@ export function SettingsView({ currentUser, onUpdateUser, onLogout }: SettingsVi
               </div>
 
               <p style={{ ...sectionTitleStyle, marginTop: '12px' }}>Accent Color</p>
-              <div style={{ ...cardStyle, padding: '24px', position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <div style={{ ...cardStyle, padding: '20px 24px', position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '10px' }}>
                   {[
-                    { color: '#5865F2', name: 'Indigo' },
-                    { color: '#ed4245', name: 'Rose' },
-                    { color: '#57F287', name: 'Emerald' },
-                    { color: '#FEE75C', name: 'Amber' },
-                    { color: '#EB459E', name: 'Pink' },
+                    { color: '#6366f1', name: 'Indigo' },
+                    { color: '#8b5cf6', name: 'Violet' },
                     { color: '#3b82f6', name: 'Blue' },
+                    { color: '#06b6d4', name: 'Cyan' },
+                    { color: '#10b981', name: 'Emerald' },
+                    { color: '#84cc16', name: 'Lime' },
+                    { color: '#f59e0b', name: 'Amber' },
                     { color: '#f97316', name: 'Orange' },
-                  ].map(({ color, name }) => (
-                    <div
-                      key={color}
-                      onClick={() => updateNestedSetting('appearance', 'themeColor', color)}
-                      title={name}
-                      style={{
-                        width: '44px', height: '44px', borderRadius: '14px', backgroundColor: color,
-                        cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                        border: settings.appearance.themeColor === color ? '3px solid #fff' : '3px solid transparent',
-                        boxShadow: settings.appearance.themeColor === color ? `0 0 0 3px ${color}40, 0 4px 14px ${color}50` : 'none',
-                        transform: settings.appearance.themeColor === color ? 'scale(1.15)' : 'scale(1)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}
-                    >
-                      {settings.appearance.themeColor === color && (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                      )}
-                    </div>
-                  ))}
+                    { color: '#ef4444', name: 'Rose' },
+                    { color: '#ec4899', name: 'Pink' },
+                  ].map(({ color, name }) => {
+                    const isSelected = settings.appearance.themeColor?.toLowerCase() === color.toLowerCase();
+                    return (
+                      <div
+                        key={color}
+                        onClick={() => updateNestedSetting('appearance', 'themeColor', color)}
+                        title={name}
+                        style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '14px',
+                          backgroundColor: color,
+                          cursor: 'pointer',
+                          transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                          border: isSelected ? '3px solid #fff' : '3px solid transparent',
+                          boxShadow: isSelected
+                            ? `0 0 0 3px ${color}40, 0 6px 18px ${color}70`
+                            : `0 2px 8px ${color}30`,
+                          transform: isSelected ? 'scale(1.15)' : 'scale(1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {isSelected && (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
