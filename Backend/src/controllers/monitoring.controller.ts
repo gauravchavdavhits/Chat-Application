@@ -4,6 +4,9 @@ import fs from 'fs';
 import { ScreenshotModel } from '../models/screenshot.model';
 import { UserModel } from '../models/user.model';
 import { logger } from '../utils/logger';
+import { getConnectedOnlineUserIds } from '../sockets/chat.socket';
+import { HttpStatus } from '../constants/httpStatus';
+import { sendSuccess, sendError } from '../utils/response';
 
 // Upload Base64 or Binary Screenshot
 export const saveScreenshot = async (req: Request, res: Response): Promise<void> => {
@@ -16,7 +19,7 @@ export const saveScreenshot = async (req: Request, res: Response): Promise<void>
     const { captureType, intervalSeconds } = req.body;
 
     if (!targetUserId || !base64Image) {
-      res.status(400).json({ success: false, message: 'targetUserId and base64Image (or image) are required' });
+      sendError(res, 'targetUserId and base64Image (or image) are required', HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -44,14 +47,10 @@ export const saveScreenshot = async (req: Request, res: Response): Promise<void>
       intervalSeconds: intervalSeconds || 30,
     });
 
-    res.status(201).json({
-      success: true,
-      data: screenshot,
-      message: 'Screenshot captured and saved successfully',
-    });
+    sendSuccess(res, screenshot, 'Screenshot captured and saved successfully', HttpStatus.CREATED);
   } catch (error: any) {
     logger.error('Error in saveScreenshot:', error);
-    res.status(500).json({ success: false, message: error.message || 'Failed to save screenshot' });
+    sendError(res, error.message || 'Failed to save screenshot', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -71,15 +70,13 @@ export const getUserScreenshots = async (req: Request, res: Response): Promise<v
 
     const total = await ScreenshotModel.countDocuments({ targetUserId: userId });
 
-    res.status(200).json({
-      success: true,
+    sendSuccess(res, screenshots, undefined, HttpStatus.OK, {
       count: screenshots.length,
       total,
-      data: screenshots,
     });
   } catch (error: any) {
     logger.error('Error in getUserScreenshots:', error);
-    res.status(500).json({ success: false, message: error.message || 'Failed to retrieve screenshots' });
+    sendError(res, error.message || 'Failed to retrieve screenshots', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -98,14 +95,12 @@ export const deleteScreenshot = async (req: Request, res: Response): Promise<voi
       }
     }
 
-    res.status(200).json({ success: true, message: 'Screenshot deleted successfully' });
+    sendSuccess(res, null, 'Screenshot deleted successfully', HttpStatus.OK);
   } catch (error: any) {
     logger.error('Error in deleteScreenshot:', error);
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
-
-import { getConnectedOnlineUserIds } from '../sockets/chat.socket';
 
 // Get Live Monitoring Status & Active Users Telemetry
 export const getMonitoringStats = async (req: Request, res: Response): Promise<void> => {
@@ -120,17 +115,14 @@ export const getMonitoringStats = async (req: Request, res: Response): Promise<v
 
     const totalScreenshots = await ScreenshotModel.countDocuments();
 
-    res.status(200).json({
-      success: true,
-      data: {
-        totalUsers,
-        onlineCount: onlineUsers.length,
-        onlineUsers,
-        totalScreenshots,
-      },
-    });
+    sendSuccess(res, {
+      totalUsers,
+      onlineCount: onlineUsers.length,
+      onlineUsers,
+      totalScreenshots,
+    }, undefined, HttpStatus.OK);
   } catch (error: any) {
     logger.error('Error in getMonitoringStats:', error);
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };

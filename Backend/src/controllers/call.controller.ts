@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { CallModel } from '../models/call.model';
+import { HttpStatus } from '../constants/httpStatus';
+import { sendSuccess, sendError } from '../utils/response';
 
 export const getUserCallHistory = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = String(req.params.userId || '');
     if (!userId) {
-      res.status(400).json({ success: false, message: 'UserId is required' });
+      sendError(res, 'UserId is required', HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -24,15 +26,9 @@ export const getUserCallHistory = async (req: Request, res: Response): Promise<v
       .lean()
       .catch(() => []);
 
-    res.status(200).json({
-      success: true,
-      data: calls,
-    });
+    sendSuccess(res, calls, undefined, HttpStatus.OK);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to fetch call history',
-    });
+    sendError(res, error.message || 'Failed to fetch call history', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -56,15 +52,8 @@ export const getConversationCallHistory = async (req: Request, res: Response): P
       .lean()
       .catch(() => []);
 
-    res.status(200).json({
-      success: true,
-      data: calls,
-    });
+    sendSuccess(res, calls, undefined, HttpStatus.OK);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to fetch conversation call history',
-    });
+    sendError(res, error.message || 'Failed to fetch conversation call history', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
-

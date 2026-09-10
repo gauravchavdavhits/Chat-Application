@@ -56,9 +56,12 @@ app.use(cookieParser());
 // Serve static files from the 'uploads' directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+import { HttpStatus } from './constants/httpStatus';
+import { sendError } from './utils/response';
+
 // Health Check Endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'Backend server is running securely' });
+  res.status(HttpStatus.OK).json({ status: 'ok', message: 'Backend server is running securely' });
 });
 
 // Swagger API Documentation UI
@@ -79,10 +82,7 @@ app.use('/api/monitoring', monitoringRoutes);
 // Global Error Handler Middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error(`❌ Server Error: ${err.message}`);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-  });
+  sendError(res, err.message || 'Internal Server Error', err.status || HttpStatus.INTERNAL_SERVER_ERROR);
 });
 
 export default app;

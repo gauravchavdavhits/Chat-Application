@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { MessageModel } from '../models/message.model';
 import { GroupModel } from '../models/group.model';
+import { HttpStatus } from '../constants/httpStatus';
+import { sendSuccess, sendError } from '../utils/response';
 
 export const getConversationMessages = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -23,11 +25,7 @@ export const getConversationMessages = async (req: Request, res: Response): Prom
     // If it is a group, verify membership
     if (group) {
       if (userId && !group.members.includes(String(userId))) {
-        res.status(403).json({
-          success: false,
-          message: 'Access denied: You are not a member of this group',
-          data: [],
-        });
+        sendError(res, 'Access denied: You are not a member of this group', HttpStatus.FORBIDDEN, { data: [] });
         return;
       }
     }
@@ -47,42 +45,28 @@ export const getConversationMessages = async (req: Request, res: Response): Prom
 
     const messages = await MessageModel.find(query).sort({ createdAt: 1 }).lean();
 
-    res.status(200).json({
-      success: true,
-      count: messages.length,
-      data: messages,
-    });
+    sendSuccess(res, messages, undefined, HttpStatus.OK, { count: messages.length });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to retrieve messages',
-    });
+    sendError(res, error.message || 'Failed to retrieve messages', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
 export const uploadFile = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
-      res.status(400).json({ success: false, message: 'No file uploaded' });
+      sendError(res, 'No file uploaded', HttpStatus.BAD_REQUEST);
       return;
     }
 
     // Construct the file URL as a relative path so the frontend proxy can handle it
     const fileUrl = `/uploads/${req.file.filename}`;
 
-    res.status(200).json({
-      success: true,
-      message: 'File uploaded successfully',
-      data: {
-        fileUrl,
-        fileName: req.file.originalname,
-        fileType: req.file.mimetype,
-      },
-    });
+    sendSuccess(res, {
+      fileUrl,
+      fileName: req.file.originalname,
+      fileType: req.file.mimetype,
+    }, 'File uploaded successfully', HttpStatus.OK);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'File upload failed',
-    });
+    sendError(res, error.message || 'File upload failed', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };

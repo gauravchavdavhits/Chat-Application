@@ -4,13 +4,15 @@ import { UserModel } from '../models/user.model';
 import { MessageModel } from '../models/message.model';
 import { CallModel } from '../models/call.model';
 import { redisCache } from '../config/redis';
+import { HttpStatus } from '../constants/httpStatus';
+import { sendSuccess, sendError } from '../utils/response';
 
 // Get user by ID
 export const getUserById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
     if (typeof userId !== 'string' || !mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(404).json({ success: false, message: 'Invalid user ID or user not found' });
+      sendError(res, 'Invalid user ID or user not found', HttpStatus.NOT_FOUND);
       return;
     }
 
@@ -19,23 +21,23 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
     // 1. Check Redis Cache first
     const cachedUser = await redisCache.get(cacheKey);
     if (cachedUser) {
-      res.status(200).json({ success: true, data: cachedUser, source: 'cache' });
+      sendSuccess(res, cachedUser, undefined, HttpStatus.OK, { source: 'cache' });
       return;
     }
 
     // 2. Fetch from MongoDB
     const user = await UserModel.findById(userId).select('-password').lean();
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      sendError(res, 'User not found', HttpStatus.NOT_FOUND);
       return;
     }
 
     // 3. Save in Redis (TTL: 10 minutes)
     await redisCache.set(cacheKey, user, 600);
 
-    res.status(200).json({ success: true, data: user });
+    sendSuccess(res, user, undefined, HttpStatus.OK);
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -44,7 +46,7 @@ export const searchUsers = async (req: Request, res: Response): Promise<void> =>
   try {
     const query = (req.query.username || req.query.q) as string;
     if (!query) {
-      res.status(400).json({ success: false, message: 'Search query is required' });
+      sendError(res, 'Search query is required', HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -52,13 +54,9 @@ export const searchUsers = async (req: Request, res: Response): Promise<void> =>
       username: { $regex: query, $options: 'i' },
     }).select('-password').lean();
 
-    res.status(200).json({
-      success: true,
-      count: users.length,
-      data: users,
-    });
+    sendSuccess(res, users, undefined, HttpStatus.OK, { count: users.length });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -70,10 +68,8 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
     // 1. Check Redis Cache first
     const cachedUsers = await redisCache.get(cacheKey);
     if (cachedUsers) {
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, cachedUsers, undefined, HttpStatus.OK, {
         count: cachedUsers.length,
-        data: cachedUsers,
         source: 'cache',
       });
       return;
@@ -85,13 +81,9 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
     // 3. Cache in Redis (TTL: 3 minutes)
     await redisCache.set(cacheKey, users, 180);
 
-    res.status(200).json({
-      success: true,
-      count: users.length,
-      data: users,
-    });
+    sendSuccess(res, users, undefined, HttpStatus.OK, { count: users.length });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -101,7 +93,7 @@ export const updateAvatar = async (req: Request, res: Response): Promise<void> =
     const userId = req.body.userId || (req as any).user?.userId;
     const avatar = req.body.avatar || req.body.avatarUrl;
     if (!userId || !avatar) {
-      res.status(400).json({ success: false, message: 'UserId and avatar URL are required' });
+      sendError(res, 'UserId and avatar URL are required', HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -112,7 +104,7 @@ export const updateAvatar = async (req: Request, res: Response): Promise<void> =
     ).select('-password').lean();
 
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      sendError(res, 'User not found', HttpStatus.NOT_FOUND);
       return;
     }
 
@@ -120,12 +112,9 @@ export const updateAvatar = async (req: Request, res: Response): Promise<void> =
     await redisCache.del(`user:${userId}`);
     await redisCache.del('users:all');
 
-    res.status(200).json({
-      success: true,
-      data: user,
-    });
+    sendSuccess(res, user, undefined, HttpStatus.OK);
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -135,7 +124,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     const userId = req.body.userId || (req as any).user?.userId;
     const { username, email } = req.body;
     if (!userId || !username || !email) {
-      res.status(400).json({ success: false, message: 'UserId, username, and email are required' });
+      sendError(res, 'UserId, username, and email are required', HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -150,18 +139,18 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
 
     if (existing) {
       if (existing.username.toLowerCase() === trimmedUsername.toLowerCase()) {
-        res.status(400).json({ success: false, message: 'Username is already taken' });
+        sendError(res, 'Username is already taken', HttpStatus.BAD_REQUEST);
         return;
       }
       if (existing.email.toLowerCase() === trimmedEmail) {
-        res.status(400).json({ success: false, message: 'Email is already taken' });
+        sendError(res, 'Email is already taken', HttpStatus.BAD_REQUEST);
         return;
       }
     }
 
     const existingUser = await UserModel.findById(userId);
     if (!existingUser) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      sendError(res, 'User not found', HttpStatus.NOT_FOUND);
       return;
     }
 
@@ -181,13 +170,9 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     await redisCache.del(`user:${userId}`);
     await redisCache.del('users:all');
 
-    res.status(200).json({
-      success: true,
-      message: 'Profile updated successfully',
-      data: userObj,
-    });
+    sendSuccess(res, userObj, 'Profile updated successfully', HttpStatus.OK);
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -197,13 +182,13 @@ export const sendEmailOtp = async (req: Request, res: Response): Promise<void> =
     const userId = req.body.userId || (req as any).user?.userId;
     const email = req.body.email || (req as any).user?.email;
     if (!userId || !email) {
-      res.status(400).json({ success: false, message: 'UserId and email are required' });
+      sendError(res, 'UserId and email are required', HttpStatus.BAD_REQUEST);
       return;
     }
 
     const user = await UserModel.findById(userId);
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      sendError(res, 'User not found', HttpStatus.NOT_FOUND);
       return;
     }
 
@@ -219,16 +204,10 @@ export const sendEmailOtp = async (req: Request, res: Response): Promise<void> =
     const { sendVerificationOtpEmail } = await import('../services/email.service');
     await sendVerificationOtpEmail(email, otp, user.username);
 
-    res.status(200).json({
-      success: true,
-      message: `Verification code sent to ${email}`,
-    });
+    sendSuccess(res, null, `Verification code sent to ${email}`, HttpStatus.OK);
   } catch (error: any) {
     console.error('Error in sendEmailOtp:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to send verification email. Please check SMTP settings.',
-    });
+    sendError(res, error.message || 'Failed to send verification email. Please check SMTP settings.', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -238,18 +217,18 @@ export const verifyEmailOtp = async (req: Request, res: Response): Promise<void>
     const userId = req.body.userId || (req as any).user?.userId;
     const { otp } = req.body;
     if (!userId || !otp) {
-      res.status(400).json({ success: false, message: 'UserId and OTP are required' });
+      sendError(res, 'UserId and OTP are required', HttpStatus.BAD_REQUEST);
       return;
     }
 
     const user = await UserModel.findById(userId);
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      sendError(res, 'User not found', HttpStatus.NOT_FOUND);
       return;
     }
 
     if (!user.emailOtp || !user.emailOtpExpires) {
-      res.status(400).json({ success: false, message: 'No OTP requested or code expired. Please request a new code.' });
+      sendError(res, 'No OTP requested or code expired. Please request a new code.', HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -257,12 +236,12 @@ export const verifyEmailOtp = async (req: Request, res: Response): Promise<void>
       user.emailOtp = undefined;
       user.emailOtpExpires = undefined;
       await user.save();
-      res.status(400).json({ success: false, message: 'Verification code has expired. Please request a new code.' });
+      sendError(res, 'Verification code has expired. Please request a new code.', HttpStatus.BAD_REQUEST);
       return;
     }
 
     if (user.emailOtp.trim() !== String(otp).trim()) {
-      res.status(400).json({ success: false, message: 'Invalid verification code. Please check your email.' });
+      sendError(res, 'Invalid verification code. Please check your email.', HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -275,25 +254,19 @@ export const verifyEmailOtp = async (req: Request, res: Response): Promise<void>
     const userObj = user.toObject();
     delete userObj.password;
 
-    res.status(200).json({
-      success: true,
-      message: 'Email verified successfully!',
-      data: userObj,
-    });
+    sendSuccess(res, userObj, 'Email verified successfully!', HttpStatus.OK);
   } catch (error: any) {
     console.error('Error in verifyEmailOtp:', error);
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
-
-
 
 // Get recent chat users for a specific user (including recent calls)
 export const getRecentChatUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = String(req.params.userId || '');
     if (!userId) {
-      res.status(400).json({ success: false, message: 'UserId is required' });
+      sendError(res, 'UserId is required', HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -370,12 +343,8 @@ export const getRecentChatUsers = async (req: Request, res: Response): Promise<v
     // Sort the combined data based on lastMessageTime descending
     data.sort((a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime());
 
-    res.status(200).json({
-      success: true,
-      count: data.length,
-      data,
-    });
+    sendSuccess(res, data, undefined, HttpStatus.OK, { count: data.length });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };

@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { UserModel } from '../models/user.model';
 import { MessageModel } from '../models/message.model';
+import { HttpStatus } from '../constants/httpStatus';
+import { sendSuccess, sendError } from '../utils/response';
 
 export const updateSettings = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -14,20 +16,13 @@ export const updateSettings = async (req: Request, res: Response): Promise<void>
     );
 
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      sendError(res, 'User not found', HttpStatus.NOT_FOUND);
       return;
     }
 
-    res.status(200).json({
-      success: true,
-      message: 'Settings updated successfully',
-      data: user.settings,
-    });
+    sendSuccess(res, user.settings, 'Settings updated successfully', HttpStatus.OK);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to update settings',
-    });
+    sendError(res, error.message || 'Failed to update settings', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -47,14 +42,8 @@ export const clearChatHistory = async (req: Request, res: Response): Promise<voi
       }
     );
 
-    res.status(200).json({
-      success: true,
-      message: 'Chat history cleared for user',
-    });
+    sendSuccess(res, null, 'Chat history cleared for user', HttpStatus.OK);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to clear chat history',
-    });
+    sendError(res, error.message || 'Failed to clear chat history', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };

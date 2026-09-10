@@ -1,14 +1,13 @@
-
-
 import { Request, Response } from 'express';
 import { GroupModel } from '../models/group.model';
 import { MessageModel } from '../models/message.model';
 import { UserModel } from '../models/user.model';
 import { getSocketIO } from '../sockets/chat.socket';
+import { HttpStatus } from '../constants/httpStatus';
+import { sendSuccess, sendError } from '../utils/response';
 
 // @desc    Create a new group
 // @route   POST /api/groups
-// @access  Public
 export const createGroup = async (req: Request, res: Response): Promise<void> => {
   try {
     const adminId = req.body.adminId || (req as any).user?.userId;
@@ -16,7 +15,7 @@ export const createGroup = async (req: Request, res: Response): Promise<void> =>
     const members = req.body.members || [];
 
     if (!name || !adminId) {
-      res.status(400).json({ success: false, message: 'Group name and adminId are required' });
+      sendError(res, 'Group name and adminId are required', HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -30,24 +29,20 @@ export const createGroup = async (req: Request, res: Response): Promise<void> =>
       members: Array.from(uniqueMembers),
     });
 
-    res.status(201).json({
-      success: true,
-      data: newGroup,
-    });
+    sendSuccess(res, newGroup, undefined, HttpStatus.CREATED);
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
 // @desc    Get user's groups
 // @route   GET /api/groups/my-groups/:userId
-// @access  Public
 export const getUserGroups = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
 
     if (!userId) {
-      res.status(400).json({ success: false, message: 'UserId is required' });
+      sendError(res, 'UserId is required', HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -75,19 +70,14 @@ export const getUserGroups = async (req: Request, res: Response): Promise<void> 
       return timeB - timeA;
     });
 
-    res.status(200).json({
-      success: true,
-      count: groupsWithMessages.length,
-      data: groupsWithMessages,
-    });
+    sendSuccess(res, groupsWithMessages, undefined, HttpStatus.OK, { count: groupsWithMessages.length });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
 // @desc    Update a group (name, avatar, members)
 // @route   PUT /api/groups/:groupId
-// @access  Public
 export const updateGroup = async (req: Request, res: Response): Promise<void> => {
   try {
     const { groupId } = req.params;
@@ -96,12 +86,12 @@ export const updateGroup = async (req: Request, res: Response): Promise<void> =>
 
     const group = await GroupModel.findById(groupId);
     if (!group) {
-      res.status(404).json({ success: false, message: 'Group not found' });
+      sendError(res, 'Group not found', HttpStatus.NOT_FOUND);
       return;
     }
 
     if (adminId && group.adminId !== adminId) {
-      res.status(403).json({ success: false, message: 'Only admin can update the group' });
+      sendError(res, 'Only admin can update the group', HttpStatus.FORBIDDEN);
       return;
     }
 
@@ -114,31 +104,27 @@ export const updateGroup = async (req: Request, res: Response): Promise<void> =>
 
     await group.save();
 
-    res.status(200).json({
-      success: true,
-      data: group,
-    });
+    sendSuccess(res, group, undefined, HttpStatus.OK);
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
 // @desc    Leave a group
 // @route   POST /api/groups/:groupId/leave
-// @access  Public
 export const leaveGroup = async (req: Request, res: Response): Promise<void> => {
   try {
     const { groupId } = req.params;
     const userId = req.body.userId || (req as any).user?.userId;
 
     if (!userId) {
-      res.status(400).json({ success: false, message: 'UserId is required' });
+      sendError(res, 'UserId is required', HttpStatus.BAD_REQUEST);
       return;
     }
 
     const group = await GroupModel.findById(groupId);
     if (!group) {
-      res.status(404).json({ success: false, message: 'Group not found' });
+      sendError(res, 'Group not found', HttpStatus.NOT_FOUND);
       return;
     }
 
@@ -152,7 +138,7 @@ export const leaveGroup = async (req: Request, res: Response): Promise<void> => 
       // Delete group if no members left
       await GroupModel.findByIdAndDelete(groupId);
       await MessageModel.deleteMany({ groupId });
-      res.status(200).json({ success: true, message: 'Group deleted' });
+      sendSuccess(res, null, 'Group deleted', HttpStatus.OK);
       return;
     } 
     
@@ -190,11 +176,8 @@ export const leaveGroup = async (req: Request, res: Response): Promise<void> => 
       io.to(groupId).emit('receive_message', payload as any);
     }
 
-    res.status(200).json({
-      success: true,
-      message: 'Left group successfully',
-    });
+    sendSuccess(res, null, 'Left group successfully', HttpStatus.OK);
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };

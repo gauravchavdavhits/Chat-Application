@@ -1,24 +1,26 @@
 import { Request, Response } from 'express';
 import { UserModel } from '../models/user.model';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
+import { HttpStatus } from '../constants/httpStatus';
+import { sendSuccess, sendError } from '../utils/response';
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
-      res.status(400).json({ success: false, message: 'Please provide username, email and password' });
+      sendError(res, 'Please provide username, email and password', HttpStatus.BAD_REQUEST);
       return;
     }
 
     const existingUsername = await UserModel.findOne({ username: username.trim() });
     if (existingUsername) {
-      res.status(400).json({ success: false, message: 'Username is already taken' });
+      sendError(res, 'Username is already taken', HttpStatus.BAD_REQUEST);
       return;
     }
 
     const existingEmail = await UserModel.findOne({ email: email.toLowerCase().trim() });
     if (existingEmail) {
-      res.status(400).json({ success: false, message: 'Email is already registered' });
+      sendError(res, 'Email is already registered', HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -56,23 +58,20 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       path: '/',
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'Registration successful',
+    sendSuccess(res, {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      isOnline: user.isOnline,
+      avatar: user.avatar,
+      settings: user.settings,
+    }, 'Registration successful', HttpStatus.CREATED, {
       token: accessToken,
       accessToken,
       refreshToken,
-      data: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        isOnline: user.isOnline,
-        avatar: user.avatar,
-        settings: user.settings,
-      },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -80,19 +79,19 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      res.status(400).json({ success: false, message: 'Please enter email and password' });
+      sendError(res, 'Please enter email and password', HttpStatus.BAD_REQUEST);
       return;
     }
 
     const user = await UserModel.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      res.status(401).json({ success: false, message: 'Invalid email or password' });
+      sendError(res, 'Invalid email or password', HttpStatus.UNAUTHORIZED);
       return;
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      res.status(401).json({ success: false, message: 'Invalid email or password' });
+      sendError(res, 'Invalid email or password', HttpStatus.UNAUTHORIZED);
       return;
     }
 
@@ -131,23 +130,20 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       path: '/',
     });
 
-    res.status(200).json({
-      success: true,
-      message: 'Login successful',
+    sendSuccess(res, {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      isOnline: user.isOnline,
+      avatar: user.avatar,
+      settings: user.settings,
+    }, 'Login successful', HttpStatus.OK, {
       token: accessToken,
       accessToken,
       refreshToken,
-      data: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        isOnline: user.isOnline,
-        avatar: user.avatar,
-        settings: user.settings,
-      },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -155,14 +151,14 @@ export const refreshTokenHandler = async (req: Request, res: Response): Promise<
   try {
     const refreshToken = req.cookies?.refresh_token || req.body?.refreshToken || req.headers['x-refresh-token'];
     if (!refreshToken) {
-      res.status(401).json({ success: false, message: 'Refresh token not found' });
+      sendError(res, 'Refresh token not found', HttpStatus.UNAUTHORIZED);
       return;
     }
 
     const decoded = verifyRefreshToken(refreshToken);
     const user = await UserModel.findById(decoded.userId);
     if (!user) {
-      res.status(401).json({ success: false, message: 'User not found or inactive' });
+      sendError(res, 'User not found or inactive', HttpStatus.UNAUTHORIZED);
       return;
     }
 
@@ -191,14 +187,13 @@ export const refreshTokenHandler = async (req: Request, res: Response): Promise<
       path: '/',
     });
 
-    res.status(200).json({
-      success: true,
+    sendSuccess(res, undefined, undefined, HttpStatus.OK, {
       token: newAccessToken,
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
     });
   } catch (error: any) {
-    res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
+    sendError(res, 'Invalid or expired refresh token', HttpStatus.UNAUTHORIZED);
   }
 };
 
@@ -206,9 +201,8 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
   try {
     res.clearCookie('auth_token', { path: '/' });
     res.clearCookie('refresh_token', { path: '/' });
-    res.status(200).json({ success: true, message: 'Logged out successfully' });
+    sendSuccess(res, null, 'Logged out successfully', HttpStatus.OK);
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
-

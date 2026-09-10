@@ -36,8 +36,31 @@ if (redisPubClient && redisSubClient) {
 // Register Socket event listeners
 registerChatSocket(io);
 
+// Handle server listen errors (e.g. port already in use)
+httpServer.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    logger.error(`❌ Port ${config.port} is already in use by another process.`);
+    process.exit(1);
+  } else {
+    logger.error(`❌ Server error: ${err.message}`);
+  }
+});
+
 // Start listening
 httpServer.listen(config.port, () => {
   logger.info(`🚀 Backend server listening on port ${config.port}`);
   logger.info(`🔗 CORS configured for localhost & ngrok tunnels`);
 });
+
+// Graceful shutdown
+const gracefulShutdown = (signal: string) => {
+  logger.info(`Received ${signal}. Gracefully closing HTTP and WebSocket server...`);
+  httpServer.close(() => {
+    logger.info('HTTP server closed successfully.');
+    process.exit(0);
+  });
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+

@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import validator from 'validator';
+import { HttpStatus } from '../constants/httpStatus';
+import { sendError } from '../utils/response';
 
 /**
  * Sanitize strings in req.body against XSS and malicious script tags
@@ -30,52 +32,53 @@ export const validateRegister = (req: Request, res: Response, next: NextFunction
 
   // 1. Username
   if (!username || typeof username !== 'string') {
-    res.status(400).json({ success: false, message: 'Username is required.' });
+    sendError(res, 'Username is required.', HttpStatus.BAD_REQUEST);
     return;
   }
   const trimmedUser = username.trim();
   if (trimmedUser.length < 3) {
-    res.status(400).json({ success: false, message: 'Username must be at least 3 characters.' });
+    sendError(res, 'Username must be at least 3 characters.', HttpStatus.BAD_REQUEST);
     return;
   }
   if (trimmedUser.length > 25) {
-    res.status(400).json({ success: false, message: 'Username cannot exceed 25 characters.' });
+    sendError(res, 'Username cannot exceed 25 characters.', HttpStatus.BAD_REQUEST);
     return;
   }
   if (!USERNAME_REGEX.test(trimmedUser)) {
-    res.status(400).json({ success: false, message: 'Username can only contain letters, numbers, dots, and underscores.' });
+    sendError(res, 'Username can only contain letters, numbers, dots, and underscores.', HttpStatus.BAD_REQUEST);
     return;
   }
 
   // 2. Email
   if (!email || typeof email !== 'string') {
-    res.status(400).json({ success: false, message: 'Email address is required.' });
+    sendError(res, 'Email address is required.', HttpStatus.BAD_REQUEST);
     return;
   }
   const trimmedEmail = email.trim();
   if (!EMAIL_REGEX.test(trimmedEmail) || !validator.isEmail(trimmedEmail)) {
-    res.status(400).json({ success: false, message: 'Please enter a valid email address (e.g. user@example.com).' });
+    sendError(res, 'Please enter a valid email address (e.g. user@example.com).', HttpStatus.BAD_REQUEST);
     return;
   }
 
   // 3. Password
   if (!password || typeof password !== 'string') {
-    res.status(400).json({ success: false, message: 'Password is required.' });
+    sendError(res, 'Password is required.', HttpStatus.BAD_REQUEST);
     return;
   }
   if (password.length < 8) {
-    res.status(400).json({ success: false, message: 'Password must be at least 8 characters long.' });
+    sendError(res, 'Password must be at least 8 characters long.', HttpStatus.BAD_REQUEST);
     return;
   }
   if (password.length > 64) {
-    res.status(400).json({ success: false, message: 'Password cannot exceed 64 characters.' });
+    sendError(res, 'Password cannot exceed 64 characters.', HttpStatus.BAD_REQUEST);
     return;
   }
   if (!PASSWORD_REGEX.test(password)) {
-    res.status(400).json({ 
-      success: false, 
-      message: 'Password must contain at least one letter, one number, and one special character.' 
-    });
+    sendError(
+      res,
+      'Password must contain at least one letter, one number, and one special character.',
+      HttpStatus.BAD_REQUEST
+    );
     return;
   }
 
@@ -89,18 +92,18 @@ export const validateLogin = (req: Request, res: Response, next: NextFunction): 
   const { email, password } = req.body;
 
   if (!email || typeof email !== 'string') {
-    res.status(400).json({ success: false, message: 'Email address is required.' });
+    sendError(res, 'Email address is required.', HttpStatus.BAD_REQUEST);
     return;
   }
 
   const trimmedEmail = email.trim();
   if (!EMAIL_REGEX.test(trimmedEmail) || !validator.isEmail(trimmedEmail)) {
-    res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
+    sendError(res, 'Please enter a valid email address.', HttpStatus.BAD_REQUEST);
     return;
   }
 
   if (!password || typeof password !== 'string' || !password.trim()) {
-    res.status(400).json({ success: false, message: 'Password is required.' });
+    sendError(res, 'Password is required.', HttpStatus.BAD_REQUEST);
     return;
   }
 
