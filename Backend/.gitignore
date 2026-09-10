@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Build Artifacts
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Uploads runtime files
+uploads/screenshots/*
+!uploads/screenshots/.gitkeep
+
+# Editor & OS Metadata
+.DS_Store
+Thumbs.db
