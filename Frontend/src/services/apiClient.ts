@@ -1,9 +1,13 @@
 import axios from 'axios';
 import { refreshAccessTokenApi } from './authService';
 
+const API_BASE = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api` 
+  : '/api';
+
 // Create a configured Axios instance
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE,
   timeout: 30000,
   withCredentials: true,
 });

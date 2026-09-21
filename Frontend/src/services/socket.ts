@@ -2,7 +2,9 @@ import { io, Socket } from 'socket.io-client';
 import { ClientToServerEvents, ServerToClientEvents } from '../types/chat.types';
 
 // Socket.IO server URL
-const SOCKET_URL = '/';
+const SOCKET_URL = import.meta.env.VITE_API_URL 
+  ? import.meta.env.VITE_API_URL.replace(/\/$/, '') 
+  : '/';
 
 // Typed Socket client instance
 let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
