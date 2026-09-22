@@ -175,11 +175,13 @@ export function AuthModal({ onAuthSuccess, initialIsLogin = true, onClose }: Aut
           });
 
           window.google.accounts.id.renderButton(googleButtonRef.current, {
+            type: 'standard',
             theme: 'filled_black',
             size: 'large',
-            text: isLogin ? 'signin_with' : 'signup_with',
-            shape: 'pill',
-            width: 320,
+            text: 'continue_with',
+            shape: 'rectangular',
+            logo_alignment: 'left',
+            width: 380,
           });
         } catch {}
       }
@@ -315,8 +317,8 @@ export function AuthModal({ onAuthSuccess, initialIsLogin = true, onClose }: Aut
         )}
 
         {/* Google One-Tap / Sign-In Button */}
-        <div className="google-auth-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', margin: '4px 0 10px 0' }}>
-          <div ref={googleButtonRef} style={{ minHeight: '44px', display: 'flex', justifyContent: 'center' }} />
+        <div className="google-auth-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: '8px', margin: '6px 0 8px 0' }}>
+          <div ref={googleButtonRef} style={{ width: '100%', minHeight: '44px', display: 'flex', justifyContent: 'center' }} />
           {googleLoading && <span style={{ fontSize: '0.78rem', color: '#c7d2fe' }}>Connecting with Google...</span>}
           <div className="auth-divider" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px', margin: '6px 0 2px 0' }}>
             <span style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
