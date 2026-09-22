@@ -35,7 +35,7 @@ app.use(
 app.disable('x-powered-by');
 
 // Use Morgan for HTTP request logging
-app.use(morgan('dev', { stream: { write: (message) => logger.info(message.trim()) } }));
+app.use(morgan('dev', { stream: { write: (message: string) => logger.info(message.trim()) } }));
 
 // Configure CORS middleware
 app.use(
