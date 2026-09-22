@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="50%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+    <linearGradient id="bubbleGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+    <linearGradient id="bubbleGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="60" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)" />
+
+  <!-- Ambient glowing orbs -->
+  <circle cx="200" cy="180" r="180" fill="#6366f1" opacity="0.18" filter="url(#glow)" />
+  <circle cx="1020" cy="450" r="220" fill="#ec4899" opacity="0.15" filter="url(#glow)" />
+  <circle cx="600" cy="300" r="260" fill="#8b5cf6" opacity="0.1" filter="url(#glow)" />
+
+  <!-- Grid overlay lines subtle -->
+  <g opacity="0.05" stroke="#ffffff" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105" />
+    <line x1="0" y1="210" x2="1200" y2="210" />
+    <line x1="0" y1="315" x2="1200" y2="315" />
+    <line x1="0" y1="420" x2="1200" y2="420" />
+    <line x1="0" y1="525" x2="1200" y2="525" />
+    <line x1="200" y1="0" x2="200" y2="630" />
+    <line x1="400" y1="0" x2="400" y2="630" />
+    <line x1="600" y1="0" x2="600" y2="630" />
+    <line x1="800" y1="0" x2="800" y2="630" />
+    <line x1="1000" y1="0" x2="1000" y2="630" />
+  </g>
+
+  <!-- Central Card Container -->
+  <rect x="120" y="80" width="960" height="470" rx="28" fill="#1e293b" fill-opacity="0.65" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+
+  <!-- App Logo Icon -->
+  <g transform="translate(180, 140)">
+    <rect width="90" height="90" rx="24" fill="url(#accentGrad)" />
+    <!-- Speech bubble icon inside -->
+    <path d="M68 40a22 22 0 0 1-2.3 9.8 22 22 0 0 1-19.7 12.2 22 22 0 0 1-9.8-2.3L22 65l4.9-14.7a22 22 0 0 1-2.3-9.8A22 22 0 0 1 44.3 18.5a22 22 0 0 1 9.8 2.3h1.3a22 22 0 0 1 12.6 19.2z" fill="#ffffff" />
+  </g>
+
+  <!-- Title & Headline -->
+  <text x="300" y="180" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="800" fill="#ffffff" letter-spacing="-0.5">
+    Chat Application
+  </text>
+  <text x="300" y="222" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="500" fill="#c7d2fe">
+    Real-Time Messaging with React, Node.js &amp; Socket.IO
+  </text>
+
+  <!-- Feature Pills -->
+  <g transform="translate(180, 280)">
+    <!-- Pill 1: WebSockets -->
+    <rect x="0" y="0" width="200" height="42" rx="21" fill="rgba(99, 102, 241, 0.2)" stroke="rgba(99, 102, 241, 0.4)" stroke-width="1" />
+    <circle cx="22" cy="21" r="5" fill="#34d399" />
+    <text x="36" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="600" fill="#f8fafc">Real-Time Sockets</text>
+
+    <!-- Pill 2: Voice & Video -->
+    <rect x="220" y="0" width="190" height="42" rx="21" fill="rgba(168, 85, 247, 0.2)" stroke="rgba(168, 85, 247, 0.4)" stroke-width="1" />
+    <circle cx="242" cy="21" r="5" fill="#a855f7" />
+    <text x="256" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="600" fill="#f8fafc">Voice &amp; Video Calls</text>
+
+    <!-- Pill 3: Group Chats -->
+    <rect x="430" y="0" width="180" height="42" rx="21" fill="rgba(236, 72, 153, 0.2)" stroke="rgba(236, 72, 153, 0.4)" stroke-width="1" />
+    <circle cx="452" cy="21" r="5" fill="#ec4899" />
+    <text x="466" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="600" fill="#f8fafc">Group Chatting</text>
+
+    <!-- Pill 4: Online Status -->
+    <rect x="630" y="0" width="190" height="42" rx="21" fill="rgba(59, 130, 246, 0.2)" stroke="rgba(59, 130, 246, 0.4)" stroke-width="1" />
+    <circle cx="652" cy="21" r="5" fill="#60a5fa" />
+    <text x="666" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="600" fill="#f8fafc">Live Presence</text>
+  </g>
+
+  <!-- Tech Stack Badges Bottom -->
+  <g transform="translate(180, 370)">
+    <text x="0" y="42" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="600" fill="#94a3b8" letter-spacing="1">BUILT WITH</text>
+    <text x="110" y="42" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="600" fill="#ffffff">React • TypeScript • Node.js • Express • MongoDB • Socket.IO • WebRTC</text>
+  </g>
+
+  <!-- Mock Chat Messages Graphic -->
+  <g transform="translate(730, 135)" opacity="0.9">
+    <!-- Bubble 1 -->
+    <rect x="0" y="0" width="280" height="48" rx="16" fill="url(#bubbleGrad1)" />
+    <text x="18" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" fill="#ffffff" font-weight="500">Hey! Is the call starting soon? 👋</text>
+
+    <!-- Bubble 2 -->
+    <rect x="40" y="60" width="240" height="48" rx="16" fill="#334155" />
+    <text x="58" y="90" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" fill="#e2e8f0" font-weight="500">Yes! Connecting now 🚀</text>
+  </g>
+</svg>
