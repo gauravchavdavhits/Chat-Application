@@ -25,19 +25,32 @@ export const ParticleBackground: React.FC = () => {
     if (!ctx) return;
 
     let animationFrameId: number;
-    let width = (canvas.width = canvas.offsetWidth);
-    let height = (canvas.height = canvas.offsetHeight);
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
 
     const handleResize = () => {
       if (!canvas) return;
-      width = canvas.width = canvas.offsetWidth;
-      height = canvas.height = canvas.offsetHeight;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+
+    // Track mouse for subtle interactive particle connection
+    const mouse = { x: -1000, y: -1000, radius: 160 };
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    };
+    const handleMouseLeave = () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
     };
 
     window.addEventListener('resize', handleResize);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseleave', handleMouseLeave);
 
-    // Generate balanced network particles
-    const particleCount = Math.min(Math.floor((width * height) / 18000), 55);
+    // Generate balanced network particles for entire screen
+    const particleCount = Math.min(Math.floor((width * height) / 16000), 75);
     const particles: Particle[] = [];
 
     for (let i = 0; i < particleCount; i++) {
@@ -47,17 +60,17 @@ export const ParticleBackground: React.FC = () => {
         vx: (Math.random() - 0.5) * 0.45,
         vy: (Math.random() - 0.5) * 0.45,
         radius: Math.random() * 1.8 + 1,
-        alpha: Math.random() * 0.5 + 0.2,
-        baseAlpha: Math.random() * 0.5 + 0.2,
+        alpha: Math.random() * 0.5 + 0.25,
+        baseAlpha: Math.random() * 0.5 + 0.25,
       });
     }
 
-    const connectionDistance = 140;
+    const connectionDistance = 145;
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Draw subtle connecting lines
+      // Draw subtle connecting lines between particles
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
@@ -71,6 +84,22 @@ export const ParticleBackground: React.FC = () => {
             ctx.lineTo(particles[j].x, particles[j].y);
             ctx.strokeStyle = `rgba(139, 92, 246, ${lineAlpha})`;
             ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+
+        // Draw gentle line to mouse cursor
+        if (mouse.x > 0 && mouse.y > 0) {
+          const mdx = particles[i].x - mouse.x;
+          const mdy = particles[i].y - mouse.y;
+          const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+          if (mdist < mouse.radius) {
+            const mAlpha = (1 - mdist / mouse.radius) * 0.35;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.strokeStyle = `rgba(168, 85, 247, ${mAlpha})`;
+            ctx.lineWidth = 1;
             ctx.stroke();
           }
         }
@@ -106,6 +135,8 @@ export const ParticleBackground: React.FC = () => {
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, []);
 
@@ -115,6 +146,7 @@ export const ParticleBackground: React.FC = () => {
       <div className="ambient-blob blob-purple" />
       <div className="ambient-blob blob-blue" />
       <div className="ambient-blob blob-cyan" />
+      <div className="ambient-blob blob-pink" />
       <div className="ambient-grid-overlay" />
       <canvas ref={canvasRef} className="hero-particle-canvas" />
     </div>

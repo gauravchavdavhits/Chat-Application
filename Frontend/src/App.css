@@ -2727,10 +2727,13 @@ input[type="search"]::-webkit-search-cancel-button {
   overflow: hidden;
 }
 
-/* Atmospheric Background Particles & Glowing Blobs */
+/* Atmospheric Background Particles & Glowing Blobs (Full Page) */
 .hero-atmosphere-container {
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
@@ -2738,46 +2741,58 @@ input[type="search"]::-webkit-search-cancel-button {
 
 .hero-particle-canvas {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .ambient-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.28;
-  animation: floatBlob 14s ease-in-out infinite alternate;
+  filter: blur(110px);
+  opacity: 0.24;
+  animation: floatBlob 16s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 .blob-purple {
-  width: 480px;
-  height: 480px;
+  width: 540px;
+  height: 540px;
   background: radial-gradient(circle, #7c3aed 0%, rgba(124, 58, 237, 0) 70%);
-  top: -100px;
-  left: -80px;
+  top: -120px;
+  left: -100px;
 }
 
 .blob-blue {
-  width: 520px;
-  height: 520px;
+  width: 580px;
+  height: 580px;
   background: radial-gradient(circle, #3b82f6 0%, rgba(59, 130, 246, 0) 70%);
-  top: 15%;
-  right: -120px;
-  animation-duration: 18s;
+  top: 25%;
+  right: -140px;
+  animation-duration: 20s;
   animation-delay: -5s;
 }
 
 .blob-cyan {
-  width: 360px;
-  height: 360px;
+  width: 420px;
+  height: 420px;
   background: radial-gradient(circle, #06b6d4 0%, rgba(6, 182, 212, 0) 70%);
-  bottom: -50px;
-  left: 35%;
-  animation-duration: 16s;
+  bottom: 10%;
+  left: 15%;
+  animation-duration: 18s;
   animation-delay: -2s;
+}
+
+.blob-pink {
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle, #ec4899 0%, rgba(236, 72, 153, 0) 70%);
+  bottom: -100px;
+  right: 20%;
+  animation-duration: 22s;
+  animation-delay: -8s;
 }
 
 @keyframes floatBlob {
@@ -2785,10 +2800,10 @@ input[type="search"]::-webkit-search-cancel-button {
     transform: translate(0px, 0px) scale(1);
   }
   50% {
-    transform: translate(40px, -30px) scale(1.08);
+    transform: translate(50px, -40px) scale(1.1);
   }
   100% {
-    transform: translate(-30px, 40px) scale(0.95);
+    transform: translate(-40px, 45px) scale(0.92);
   }
 }
 
@@ -2798,8 +2813,8 @@ input[type="search"]::-webkit-search-cancel-button {
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 50px 50px;
-  opacity: 0.6;
+  background-size: 48px 48px;
+  opacity: 0.65;
 }
 
 /* Two-Column Hero Layout */
@@ -3402,7 +3417,9 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .landing-feature-item {
-  background: rgba(30, 41, 59, 0.5);
+  background: rgba(30, 41, 59, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 2rem;
@@ -3411,7 +3428,7 @@ input[type="search"]::-webkit-search-cancel-button {
 
 .landing-feature-item:hover {
   border-color: rgba(99, 102, 241, 0.5);
-  background: rgba(30, 41, 59, 0.75);
+  background: rgba(30, 41, 59, 0.6);
   transform: translateY(-3px);
 }
 
@@ -3443,7 +3460,9 @@ input[type="search"]::-webkit-search-cancel-button {
 
 /* 5. Technology Grid */
 .landing-tech-section {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
 }
@@ -3455,12 +3474,21 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .landing-tech-card {
-  background: var(--bg-card);
+  background: rgba(30, 41, 59, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 18px;
   padding: 1.75rem;
   display: flex;
   flex-direction: column;
+  transition: all 0.25s ease;
+}
+
+.landing-tech-card:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(30, 41, 59, 0.55);
+  transform: translateY(-3px);
 }
 
 .landing-tech-tag {
@@ -3499,12 +3527,21 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .landing-step-item {
-  background: rgba(30, 41, 59, 0.4);
+  background: rgba(30, 41, 59, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 2.25rem 2rem;
   text-align: center;
   position: relative;
+  transition: all 0.25s ease;
+}
+
+.landing-step-item:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(30, 41, 59, 0.55);
+  transform: translateY(-3px);
 }
 
 .landing-step-num {
@@ -3538,7 +3575,9 @@ input[type="search"]::-webkit-search-cancel-button {
 
 /* 7. Security Grid */
 .landing-security-section {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
 }
@@ -3550,10 +3589,19 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .landing-security-item {
-  background: var(--bg-card);
+  background: rgba(30, 41, 59, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 18px;
   padding: 1.8rem;
+  transition: all 0.25s ease;
+}
+
+.landing-security-item:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(30, 41, 59, 0.55);
+  transform: translateY(-3px);
 }
 
 .landing-security-name {
@@ -3580,15 +3628,18 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .landing-faq-item {
-  background: rgba(30, 41, 59, 0.45);
+  background: rgba(30, 41, 59, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   overflow: hidden;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .landing-faq-item:hover {
   border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(30, 41, 59, 0.5);
 }
 
 .landing-faq-question {
@@ -3628,8 +3679,12 @@ input[type="search"]::-webkit-search-cancel-button {
 .landing-footer {
   border-top: 1px solid var(--border-color);
   padding: 3rem 0;
-  background: rgba(15, 23, 42, 0.9);
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   margin-top: auto;
+  position: relative;
+  z-index: 2;
 }
 
 .landing-footer-container {

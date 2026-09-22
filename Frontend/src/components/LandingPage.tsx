@@ -33,6 +33,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAuthSuccess }) => {
 
   return (
     <div className="landing-wrapper">
+      {/* Global Atmospheric particle & glowing node background canvas for the entire page */}
+      <ParticleBackground />
+
       {/* 1. Header & Navigation */}
       <header className="landing-header">
         <div className="landing-container landing-nav-container">
@@ -84,10 +87,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAuthSuccess }) => {
 
       {/* 2. Main Content */}
       <main>
-        {/* HERO SECTION WITH ATMOSPHERIC BACKGROUND & DYNAMIC TYPING */}
+        {/* HERO SECTION WITH DYNAMIC TYPING & PREVIEW */}
         <section id="hero" className="landing-section landing-hero-section">
-          {/* Ambient particle & node background canvas */}
-          <ParticleBackground />
 
           <div className="landing-container landing-hero-layout">
             {/* Left Column: Heading, Dynamic Typing, and CTA */}
