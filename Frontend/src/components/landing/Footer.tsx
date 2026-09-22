@@ -70,28 +70,10 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAuth }) => {
           </ul>
         </div>
 
-        {/* Resources & Open Source */}
+        {/* Resources & Account */}
         <div className="landing-footer-col">
-          <h4 className="footer-col-title">Resources</h4>
+          <h4 className="footer-col-title">Account</h4>
           <ul className="footer-links-list">
-            <li>
-              <a
-                href="https://github.com/gauravchavdavhits/Chat-Application"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                GitHub Repository ↗
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://gauravchavdavhits.github.io/Chat-Application/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Live Demo ↗
-              </a>
-            </li>
             <li>
               <button
                 type="button"
@@ -114,18 +96,12 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAuth }) => {
         </div>
       </div>
 
-      {/* Bottom Legal & Back To Top */}
+      {/* Bottom Legal Notice */}
       <div className="landing-footer-bottom">
         <div className="landing-container footer-bottom-container">
           <p className="copyright-text">
             © 2026 Chat Application. All rights reserved.
           </p>
-          <a href="#hero" onClick={handleScrollToTop} className="footer-back-to-top">
-            <span>Back to Top</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M18 15l-6-6-6 6" />
-            </svg>
-          </a>
         </div>
       </div>
     </footer>

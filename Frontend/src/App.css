@@ -4059,15 +4059,16 @@ input[type="search"]::-webkit-search-cancel-button {
 .footer-bottom-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
 }
 
 .copyright-text {
-  font-size: 0.84rem;
+  font-size: 0.88rem;
   color: var(--landing-text-muted);
   margin: 0;
+  text-align: center;
 }
 
 .footer-back-to-top {
