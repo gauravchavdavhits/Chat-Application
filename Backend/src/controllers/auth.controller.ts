@@ -185,3 +185,113 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
     sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
+
+import { OAuth2Client } from 'google-auth-library';
+const googleClient = new OAuth2Client(config.googleClientId);
+
+export const googleAuth = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      sendError(res, 'Google credential token is required', HttpStatus.BAD_REQUEST);
+      return;
+    }
+
+    // Verify Google ID Token with Google's public keys
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: config.googleClientId,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      sendError(res, 'Invalid Google token payload', HttpStatus.UNAUTHORIZED);
+      return;
+    }
+
+    const email = payload.email.toLowerCase().trim();
+    const name = payload.name || payload.given_name || email.split('@')[0];
+    const picture = payload.picture || '';
+
+    // Check if user already exists
+    let user = await UserModel.findOne({ email });
+
+    if (!user) {
+      // Generate clean unique username from Google name or email prefix
+      let baseUsername = name.replace(/[^a-zA-Z0-9_.]/g, '').toLowerCase().slice(0, 18);
+      if (!baseUsername || baseUsername.length < 3) {
+        baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9_.]/g, '').toLowerCase().slice(0, 18);
+      }
+      let finalUsername = baseUsername;
+      let counter = 1;
+      while (await UserModel.findOne({ username: finalUsername })) {
+        finalUsername = `${baseUsername}${counter++}`;
+      }
+
+      // Create new user authenticated via Google
+      user = await UserModel.create({
+        username: finalUsername,
+        email,
+        password: `GOOGLE_OAUTH_${Math.random().toString(36).slice(-12)}_${Date.now()}`,
+        avatar: picture,
+        isEmailVerified: true,
+        isOnline: true,
+      });
+    } else {
+      user.isOnline = true;
+      if (!user.avatar && picture) {
+        user.avatar = picture;
+      }
+      await user.save();
+    }
+
+    const tokenPayload = {
+      userId: user._id.toString(),
+      email: user.email,
+      username: user.username,
+    };
+
+    const accessToken = generateAccessToken(tokenPayload);
+    const refreshToken = generateRefreshToken(tokenPayload);
+
+    const isProd = config.isProduction;
+
+    res.cookie('auth_token', accessToken, {
+      httpOnly: false,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      maxAge: 15 * 60 * 1000,
+      path: '/',
+    });
+
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: false,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/',
+    });
+
+    sendSuccess(
+      res,
+      {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        isOnline: user.isOnline,
+        avatar: user.avatar,
+        settings: user.settings,
+      },
+      'Google sign-in successful',
+      HttpStatus.OK,
+      {
+        token: accessToken,
+        accessToken,
+        refreshToken,
+      }
+    );
+  } catch (error: any) {
+    sendError(res, error.message || 'Google authentication failed', HttpStatus.UNAUTHORIZED);
+  }
+};
+

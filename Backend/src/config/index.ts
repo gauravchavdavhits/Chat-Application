@@ -13,6 +13,7 @@ export const config = {
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   redisUri: process.env.REDIS_URI || 'redis://localhost:6379',
   redisEnabled: process.env.REDIS_ENABLED === 'true' || false,
+  googleClientId: process.env.GOOGLE_CLIENT_ID || '266812807141-ap7him4qdtr7in6qc99qhesb1efdffjr.apps.googleusercontent.com',
   email: {
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.EMAIL_PORT || '587', 10),

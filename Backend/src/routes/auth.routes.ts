@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registerUser, loginUser, logoutUser, refreshTokenHandler } from '../controllers/auth.controller';
+import { registerUser, loginUser, logoutUser, refreshTokenHandler, googleAuth } from '../controllers/auth.controller';
 import { authLimiter } from '../middlewares/rateLimiter.middleware';
 import { validateRegister, validateLogin } from '../middlewares/validator.middleware';
 
@@ -226,5 +226,28 @@ router.post('/refresh', refreshTokenHandler);
  *                   example: Logged out successfully
  */
 router.post('/logout', logoutUser);
+
+/**
+ * @swagger
+ * /api/auth/google:
+ *   post:
+ *     summary: Authenticate user using Google ID Token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - credential
+ *             properties:
+ *               credential:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Google authentication successful
+ */
+router.post('/google', googleAuth);
 
 export default router;

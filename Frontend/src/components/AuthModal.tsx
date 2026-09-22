@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { UserProfile } from '../types/chat.types';
-import { registerApi, loginApi } from '../services/authService';
+import { registerApi, loginApi, googleAuthApi } from '../services/authService';
 
 interface AuthModalProps {
   onAuthSuccess: (user: UserProfile) => void;
@@ -137,6 +137,67 @@ export function AuthModal({ onAuthSuccess, initialIsLogin = true, onClose }: Aut
   const hasNumber = /[0-9]/.test(currentPassword);
   const hasSpecial = /[@$!%*?&#^()_+={}\[\]:;<>,.?/~\\-]/.test(currentPassword);
 
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogleCredentialResponse = async (response: any) => {
+    if (!response || !response.credential) return;
+    try {
+      setGoogleLoading(true);
+      setServerError('');
+      const res = await googleAuthApi(response.credential);
+      if (res && res.data) {
+        onAuthSuccess(res.data);
+        if (onClose) onClose();
+      }
+    } catch (err: any) {
+      setServerError(
+        err?.response?.data?.message || err.message || 'Google sign-in failed. Please try again.'
+      );
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const clientId =
+      import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+      '266812807141-ap7him4qdtr7in6qc99qhesb1efdffjr.apps.googleusercontent.com';
+
+    const renderGoogleBtn = () => {
+      if (window.google && window.google.accounts && window.google.accounts.id && googleButtonRef.current) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleGoogleCredentialResponse,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
+            theme: 'filled_black',
+            size: 'large',
+            text: isLogin ? 'signin_with' : 'signup_with',
+            shape: 'pill',
+            width: 320,
+          });
+        } catch {}
+      }
+    };
+
+    if (window.google?.accounts?.id) {
+      renderGoogleBtn();
+    } else {
+      const interval = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          renderGoogleBtn();
+          clearInterval(interval);
+        }
+      }, 200);
+      return () => clearInterval(interval);
+    }
+  }, [isLogin]);
+
   return (
     <main className="auth-overlay">
       <div className="auth-card" style={{ position: 'relative' }}>
@@ -252,6 +313,17 @@ export function AuthModal({ onAuthSuccess, initialIsLogin = true, onClose }: Aut
             ✅ {successMessage}
           </div>
         )}
+
+        {/* Google One-Tap / Sign-In Button */}
+        <div className="google-auth-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', margin: '4px 0 10px 0' }}>
+          <div ref={googleButtonRef} style={{ minHeight: '44px', display: 'flex', justifyContent: 'center' }} />
+          {googleLoading && <span style={{ fontSize: '0.78rem', color: '#c7d2fe' }}>Connecting with Google...</span>}
+          <div className="auth-divider" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px', margin: '6px 0 2px 0' }}>
+            <span style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
+            <span style={{ fontSize: '0.74rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>or with email</span>
+            <span style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
+          </div>
+        </div>
 
         <form
           className="auth-form"

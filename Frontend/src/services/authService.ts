@@ -53,6 +53,23 @@ export const loginApi = async (
   return res.data;
 };
 
+export const googleAuthApi = async (credential: string): Promise<AuthResponse> => {
+  const res = await axios.post(`${API_BASE_URL}/auth/google`, { credential }, { withCredentials: true });
+  const token = res.data.accessToken || res.data.token;
+  const refreshToken = res.data.refreshToken;
+
+  if (token) {
+    localStorage.setItem('auth_token', token);
+    document.cookie = `auth_token=${token}; path=/; max-age=900; SameSite=Lax`;
+  }
+  if (refreshToken) {
+    localStorage.setItem('refresh_token', refreshToken);
+    document.cookie = `refresh_token=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+  }
+  return res.data;
+};
+
+
 export const refreshAccessTokenApi = async (): Promise<string | null> => {
   try {
     const refreshToken = localStorage.getItem('refresh_token');
