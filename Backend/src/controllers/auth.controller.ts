@@ -3,6 +3,7 @@ import { UserModel } from '../models/user.model';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { HttpStatus } from '../constants/httpStatus';
 import { sendSuccess, sendError } from '../utils/response';
+import { config } from '../config';
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -85,11 +86,13 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     const accessToken = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
 
+    const isProd = config.isProduction;
+
     // Set Access Token cookie
     res.cookie('auth_token', accessToken, {
       httpOnly: false,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 15 * 60 * 1000, // 15 minutes
       path: '/',
     });
@@ -97,8 +100,8 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     // Set Refresh Token cookie
     res.cookie('refresh_token', refreshToken, {
       httpOnly: false,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
     });
@@ -144,18 +147,20 @@ export const refreshTokenHandler = async (req: Request, res: Response): Promise<
     const newAccessToken = generateAccessToken(tokenPayload);
     const newRefreshToken = generateRefreshToken(tokenPayload);
 
+    const isProd = config.isProduction;
+
     res.cookie('auth_token', newAccessToken, {
       httpOnly: false,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 15 * 60 * 1000,
       path: '/',
     });
 
     res.cookie('refresh_token', newRefreshToken, {
       httpOnly: false,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
@@ -172,8 +177,9 @@ export const refreshTokenHandler = async (req: Request, res: Response): Promise<
 
 export const logoutUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    res.clearCookie('auth_token', { path: '/' });
-    res.clearCookie('refresh_token', { path: '/' });
+    const isProd = config.isProduction;
+    res.clearCookie('auth_token', { path: '/', secure: isProd, sameSite: isProd ? 'none' : 'lax' });
+    res.clearCookie('refresh_token', { path: '/', secure: isProd, sameSite: isProd ? 'none' : 'lax' });
     sendSuccess(res, null, 'Logged out successfully', HttpStatus.OK);
   } catch (error: any) {
     sendError(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);

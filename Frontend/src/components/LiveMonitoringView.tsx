@@ -8,6 +8,7 @@ import {
   deleteScreenshotApi,
   MonitoringStats,
 } from '../services/monitoringService';
+import { resolveMediaUrl } from '../utils/url.util';
 
 interface LiveMonitoringViewProps {
   currentUser: UserProfile;
@@ -683,11 +684,11 @@ export function LiveMonitoringView({ currentUser }: LiveMonitoringViewProps) {
                       }}
                     >
                       <div
-                        onClick={() => setSelectedImage(s.imageUrl)}
+                        onClick={() => setSelectedImage(resolveMediaUrl(s.imageUrl))}
                         style={{ height: '160px', overflow: 'hidden', cursor: 'pointer', position: 'relative', background: '#020617' }}
                       >
                         <img
-                          src={s.imageUrl}
+                          src={resolveMediaUrl(s.imageUrl)}
                           alt="Snapshot"
                           style={{
                             width: '100%',

@@ -59,7 +59,14 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 import { HttpStatus } from './constants/httpStatus';
 import { sendError } from './utils/response';
 
-// Health Check Endpoint
+// Health Check Endpoints
+app.get('/api/health', (req, res) => {
+  res.status(HttpStatus.OK).json({
+    success: true,
+    message: 'Chat API is running',
+  });
+});
+
 app.get('/health', (req, res) => {
   res.status(HttpStatus.OK).json({ status: 'ok', message: 'Backend server is running securely' });
 });

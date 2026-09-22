@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { ChatMessage, UserProfile, CallRecord, ChatTarget } from '../types/chat.types';
+import { resolveMediaUrl } from '../utils/url.util';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -306,7 +307,7 @@ export function MessageList({ messages, callRecords = [], currentUser, selectedT
           (msg.fileUrl && /\.(jpeg|jpg|gif|png|webp|svg|bmp)(\?.*)?$/i.test(msg.fileUrl)) ||
           (msg.fileName && /\.(jpeg|jpg|gif|png|webp|svg|bmp)$/i.test(msg.fileName))
         );
-        const displayUrl = msg.fileUrl?.replace('http://localhost:5000', '');
+        const displayUrl = resolveMediaUrl(msg.fileUrl);
         const repliedMessage = msg.replyTo ? messages.find(m => m.id === msg.replyTo) : null;
 
         const handleCopy = () => { if (msg.message) navigator.clipboard.writeText(msg.message); };

@@ -20,26 +20,39 @@ export const config = {
     pass: process.env.EMAIL_PASS || '',
     from: process.env.EMAIL_FROM || '"Bidirectional Chat" <no-reply@bidirectionalchat.com>',
   },
+  isProduction: process.env.NODE_ENV === 'production',
   corsOrigin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Allow requests with no origin (like mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
-    
-    // Check if origin matches localhost, ngrok, or configured origins
-    const allowed = [
+
+    const configuredOrigins = (process.env.CORS_ORIGIN || '')
+      .split(',')
+      .map((o) => o.trim().replace(/\/$/, ''))
+      .filter(Boolean);
+
+    const defaultAllowed = [
       'http://localhost:5173',
       'http://127.0.0.1:5173',
       'https://spoiled-fondness-unworldly.ngrok-free.dev',
-      process.env.CORS_ORIGIN
-    ].filter(Boolean);
+    ];
+
+    const allowedOrigins = new Set([...defaultAllowed, ...configuredOrigins]);
+    const cleanOrigin = origin.replace(/\/$/, '');
 
     if (
-      allowed.includes(origin) ||
-      origin.endsWith('.ngrok-free.dev') ||
-      origin.endsWith('.ngrok.io') ||
-      origin.endsWith('.ngrok-free.app')
+      allowedOrigins.has(cleanOrigin) ||
+      cleanOrigin.endsWith('.ngrok-free.dev') ||
+      cleanOrigin.endsWith('.ngrok.io') ||
+      cleanOrigin.endsWith('.ngrok-free.app') ||
+      cleanOrigin.endsWith('.github.io')
     ) {
       return callback(null, true);
     }
-    return callback(null, true); // Permissive in dev so ngrok tunnels never get blocked
+
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true); // Permissive in development
+    }
+
+    return callback(new Error(`CORS origin not allowed: ${origin}`));
   },
 };

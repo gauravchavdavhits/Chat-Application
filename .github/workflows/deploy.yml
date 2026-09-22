@@ -30,10 +30,13 @@ jobs:
           node-version: 20
 
       - name: Install dependencies & Build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           cd Frontend
           npm ci
           npm run build
+          cp dist/index.html dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
