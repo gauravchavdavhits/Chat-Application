@@ -31,7 +31,7 @@ jobs:
 
       - name: Install dependencies & Build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://chat-application-backend-jrsk.onrender.com' }}
         run: |
           cd Frontend
           npm ci
