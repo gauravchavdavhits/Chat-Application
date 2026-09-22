@@ -6,6 +6,8 @@ import { registerApi, loginApi } from '../services/authService';
 
 interface AuthModalProps {
   onAuthSuccess: (user: UserProfile) => void;
+  initialIsLogin?: boolean;
+  onClose?: () => void;
 }
 
 // Validation Regex
@@ -49,8 +51,8 @@ const registerValidationSchema = Yup.object({
     .oneOf([Yup.ref('password')], 'Passwords must match'),
 });
 
-export function AuthModal({ onAuthSuccess }: AuthModalProps) {
-  const [isLogin, setIsLogin] = useState(true);
+export function AuthModal({ onAuthSuccess, initialIsLogin = true, onClose }: AuthModalProps) {
+  const [isLogin, setIsLogin] = useState(initialIsLogin);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -137,7 +139,33 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
 
   return (
     <main className="auth-overlay">
-      <div className="auth-card">
+      <div className="auth-card" style={{ position: 'relative' }}>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close authentication modal"
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              color: '#94a3b8',
+              borderRadius: '50%',
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: '16px',
+              zIndex: 10,
+            }}
+          >
+            ✕
+          </button>
+        )}
         <header className="auth-header">
           <div className="auth-logo-wrapper">
             <div className="auth-logo-glow"></div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserProfile } from './types/chat.types';
+import { LandingPage } from './components/LandingPage';
 import { AuthModal } from './components/AuthModal';
 import { ChatsSidebar } from './components/ChatsSidebar';
 import { PeopleSidebar } from './components/PeopleSidebar';
@@ -261,9 +262,9 @@ export default function App() {
     }
   }, [currentUser?.settings]);
 
-  // If not logged in, show Auth Modal
+  // If not logged in, show SEO-optimized Landing Page with Auth flow
   if (!currentUser) {
-    return <AuthModal onAuthSuccess={handleAuthSuccess} />;
+    return <LandingPage onAuthSuccess={handleAuthSuccess} />;
   }
 
   // Logged in – show main app layout
