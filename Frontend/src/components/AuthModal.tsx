@@ -446,7 +446,7 @@ export function AuthModal({ onAuthSuccess, initialIsLogin = true, onClose }: Aut
             )}
           </div>
 
-          {/* FIXED BOTTOM ACTION BUTTON & ACCESSIBLE FEATURE SUMMARY */}
+          {/* FIXED BOTTOM ACTION BUTTON */}
           <footer className="auth-footer">
             <button
               type="submit"
@@ -459,23 +459,6 @@ export function AuthModal({ onAuthSuccess, initialIsLogin = true, onClose }: Aut
                 ? 'Sign In'
                 : 'Create Account'}
             </button>
-
-            {/* Semantic platform feature highlights for crawlers & accessibility */}
-            <section className="auth-features-summary" aria-label="Platform Architecture">
-              <h2 className="sr-only">Real-Time Chat Application Architecture</h2>
-              <div className="auth-tech-badges">
-                <span>React</span>
-                <span>TypeScript</span>
-                <span>Node.js</span>
-                <span>Express</span>
-                <span>MongoDB</span>
-                <span>Socket.IO</span>
-              </div>
-              <h3 className="sr-only">Key Communication Features</h3>
-              <p className="auth-features-text">
-                Real-time messaging, private chats, group conversations, voice &amp; video calling, and live presence.
-              </p>
-            </section>
           </footer>
         </form>
       </div>
