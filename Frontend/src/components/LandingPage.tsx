@@ -1,10 +1,21 @@
 import React, { useState } from 'react';
 import { AuthModal } from './AuthModal';
+import { ParticleBackground } from './ParticleBackground';
+import { TypingText } from './TypingText';
+import { ChatPreview } from './ChatPreview';
 import { UserProfile } from '../types/chat.types';
 
 interface LandingPageProps {
   onAuthSuccess: (user: UserProfile) => void;
 }
+
+const DYNAMIC_PHRASES = [
+  'with your people',
+  'in real time',
+  'from anywhere',
+  'without limits',
+  'with confidence',
+];
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onAuthSuccess }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -73,60 +84,62 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAuthSuccess }) => {
 
       {/* 2. Main Content */}
       <main>
-        {/* HERO SECTION */}
+        {/* HERO SECTION WITH ATMOSPHERIC BACKGROUND & DYNAMIC TYPING */}
         <section id="hero" className="landing-section landing-hero-section">
-          <div className="landing-container landing-hero-container">
-            <div className="landing-badge">
-              <span className="landing-badge-dot" aria-hidden="true" />
-              <span>Real-Time Bidirectional Communication</span>
+          {/* Ambient particle & node background canvas */}
+          <ParticleBackground />
+
+          <div className="landing-container landing-hero-layout">
+            {/* Left Column: Heading, Dynamic Typing, and CTA */}
+            <div className="landing-hero-content">
+              <div className="landing-badge">
+                <span className="landing-badge-dot" aria-hidden="true" />
+                <span>✦ Real-Time Communication</span>
+              </div>
+
+              <h1 className="landing-hero-title">
+                <span className="headline-static-line">Connect, chat and collaborate</span>
+                <span className="headline-dynamic-line">
+                  <TypingText phrases={DYNAMIC_PHRASES} />
+                </span>
+              </h1>
+
+              <p className="landing-hero-subtitle">
+                Experience fast, simple, and engaging conversations with a modern real-time chat experience built on React, TypeScript, Node.js, Express, Socket.IO, and MongoDB.
+              </p>
+
+              <div className="landing-hero-cta">
+                <button
+                  type="button"
+                  className="landing-hero-btn landing-btn-primary"
+                  onClick={() => handleOpenAuth('register')}
+                >
+                  Start Chatting
+                </button>
+                <a
+                  href="#features"
+                  className="landing-hero-btn landing-btn-secondary"
+                >
+                  Explore Features
+                </a>
+              </div>
+
+              {/* Trust/Status indicator line */}
+              <div className="landing-hero-trust" aria-label="Application Highlights">
+                <span className="trust-indicator" aria-hidden="true">●</span>
+                <span className="trust-item">Real-Time Messaging</span>
+                <span className="trust-divider" aria-hidden="true">•</span>
+                <span className="trust-item">Fast</span>
+                <span className="trust-divider" aria-hidden="true">•</span>
+                <span className="trust-item">WebRTC Voice &amp; Video</span>
+                <span className="trust-divider" aria-hidden="true">•</span>
+                <span className="trust-item">Secure</span>
+              </div>
             </div>
 
-            <h1 className="landing-hero-title">
-              Real-Time Chat Application with Instant Messaging &amp; Calls
-            </h1>
-
-            <p className="landing-hero-subtitle">
-              A responsive real-time messaging application built with React, TypeScript, Node.js, Express, Socket.IO, and MongoDB. Connect with friends and communities through instant messaging, live presence indicators, group chats, and WebRTC voice &amp; video calls.
-            </p>
-
-            <div className="landing-hero-cta">
-              <button
-                type="button"
-                className="landing-hero-btn landing-btn-primary"
-                onClick={() => handleOpenAuth('register')}
-              >
-                Launch Chat Application
-              </button>
-              <a
-                href="https://github.com/gauravchavdavhits/Chat-Application"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="landing-hero-btn landing-btn-secondary"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ marginRight: '6px' }}>
-                  <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-                </svg>
-                View Source Code
-              </a>
-            </div>
-
-            {/* Application Preview Cards */}
-            <div className="landing-preview-grid">
-              <div className="landing-preview-card">
-                <div className="landing-preview-icon" aria-hidden="true">⚡</div>
-                <h3 className="landing-preview-title">Real-Time Messaging</h3>
-                <p className="landing-preview-desc">Instant delivery with Socket.IO bidirectional events, live typing indicators, and message history.</p>
-              </div>
-              <div className="landing-preview-card">
-                <div className="landing-preview-icon" aria-hidden="true">📞</div>
-                <h3 className="landing-preview-title">Voice &amp; Video Calls</h3>
-                <p className="landing-preview-desc">Peer-to-peer audio and video communication powered by modern WebRTC integration.</p>
-              </div>
-              <div className="landing-preview-card">
-                <div className="landing-preview-icon" aria-hidden="true">👥</div>
-                <h3 className="landing-preview-title">Group Conversations</h3>
-                <p className="landing-preview-desc">Collaborate in multi-user channels with real-time participation and unread badges.</p>
-              </div>
+            {/* Right Column: Interactive Chat Preview */}
+            <div className="landing-hero-visual">
+              <ChatPreview />
             </div>
           </div>
         </section>
