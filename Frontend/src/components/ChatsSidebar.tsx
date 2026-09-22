@@ -109,7 +109,10 @@ export function ChatsSidebar({
                   {friend.avatar ? (
                     <img 
                       src={friend.avatar} 
-                      alt="Avatar" 
+                      alt={`${friend.username}'s profile avatar`} 
+                      width="40"
+                      height="40"
+                      loading="lazy"
                       style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
                       onError={(e) => {
                         (e.currentTarget as HTMLElement).style.display = 'none';

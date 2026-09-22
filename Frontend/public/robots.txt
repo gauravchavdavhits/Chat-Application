@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gauravchavdavhits.github.io/Chat-Application/sitemap.xml

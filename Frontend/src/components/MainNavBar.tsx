@@ -108,7 +108,10 @@ export const MainNavBar: React.FC<MainNavBarProps> = ({ activeTab, onTabChange, 
           {currentUser.avatar && !avatarError ? (
             <img 
               src={currentUser.avatar} 
-              alt="Profile" 
+              alt={`${currentUser.username}'s profile avatar`} 
+              width="36"
+              height="36"
+              loading="lazy"
               onError={() => setAvatarError(true)} 
             />
           ) : (

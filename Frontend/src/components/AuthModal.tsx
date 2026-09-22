@@ -136,12 +136,12 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
   const hasSpecial = /[@$!%*?&#^()_+={}\[\]:;<>,.?/~\\-]/.test(currentPassword);
 
   return (
-    <div className="auth-overlay">
+    <main className="auth-overlay">
       <div className="auth-card">
-        <div className="auth-header">
+        <header className="auth-header">
           <div className="auth-logo-wrapper">
             <div className="auth-logo-glow"></div>
-            <div className="auth-logo">
+            <div className="auth-logo" aria-hidden="true">
               <svg
                 width="28"
                 height="28"
@@ -178,17 +178,19 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
               </svg>
             </div>
           </div>
-          <h2 className="auth-title">Bidirectional Chat</h2>
+          <h1 className="auth-title">Chat Application</h1>
           <p className="auth-subtitle">
-            {isLogin ? 'Welcome back! Sign in to continue' : 'Create an account to start real-time messaging'}
+            {isLogin ? 'Welcome back! Sign in to continue real-time messaging' : 'Create an account to start real-time messaging'}
           </p>
-        </div>
+        </header>
 
-        <div className="auth-tabs">
+        <section aria-label="Authentication Type" className="auth-tabs">
           <button
             type="button"
             className={`auth-tab ${isLogin ? 'active' : ''}`}
             onClick={() => handleTabSwitch(true)}
+            aria-selected={isLogin}
+            role="tab"
           >
             Login
           </button>
@@ -196,13 +198,15 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
             type="button"
             className={`auth-tab ${!isLogin ? 'active' : ''}`}
             onClick={() => handleTabSwitch(false)}
+            aria-selected={!isLogin}
+            role="tab"
           >
             Register
           </button>
-        </div>
+        </section>
 
         {serverError && (
-          <div className="auth-error-alert">
+          <div className="auth-error-alert" role="alert">
             {serverError}
           </div>
         )}
@@ -210,6 +214,7 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
         {successMessage && (
           <div
             className="auth-error-alert success"
+            role="status"
             style={{
               background: 'rgba(16, 185, 129, 0.15)',
               borderColor: 'rgba(16, 185, 129, 0.3)',
@@ -224,6 +229,7 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
           className="auth-form"
           onSubmit={activeFormik.handleSubmit}
           noValidate
+          aria-label={isLogin ? 'User Login Form' : 'User Registration Form'}
         >
           {/* SCROLLABLE FIELDS CONTAINER */}
           <div className="auth-body">
@@ -251,7 +257,7 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
                   autoComplete="username"
                 />
                 {registerFormik.touched.username && registerFormik.errors.username && (
-                  <span className="field-error-text">
+                  <span className="field-error-text" role="alert">
                     {registerFormik.errors.username}
                   </span>
                 )}
@@ -281,7 +287,7 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
                 autoComplete="email"
               />
               {activeFormik.touched.email && activeFormik.errors.email && (
-                <span className="field-error-text">
+                <span className="field-error-text" role="alert">
                   {activeFormik.errors.email}
                 </span>
               )}
@@ -333,14 +339,14 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
                 </button>
               </div>
               {activeFormik.touched.password && activeFormik.errors.password && (
-                <span className="field-error-text">
+                <span className="field-error-text" role="alert">
                   {activeFormik.errors.password}
                 </span>
               )}
 
               {/* Live Password Strength Checklist (Register Mode) */}
               {!isLogin && (
-                <div className="password-requirements">
+                <div className="password-requirements" aria-label="Password Requirements">
                   <div className={`password-req-item ${hasMinLength ? 'met' : ''}`}>
                     <span>{hasMinLength ? '✓' : '○'}</span> Minimum 8 characters
                   </div>
@@ -404,7 +410,7 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
                   </button>
                 </div>
                 {registerFormik.touched.confirmPassword && registerFormik.errors.confirmPassword && (
-                  <span className="field-error-text">
+                  <span className="field-error-text" role="alert">
                     {registerFormik.errors.confirmPassword}
                   </span>
                 )}
@@ -412,8 +418,8 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
             )}
           </div>
 
-          {/* FIXED BOTTOM ACTION BUTTON */}
-          <div className="auth-footer">
+          {/* FIXED BOTTOM ACTION BUTTON & ACCESSIBLE FEATURE SUMMARY */}
+          <footer className="auth-footer">
             <button
               type="submit"
               className="auth-submit-btn"
@@ -425,10 +431,27 @@ export function AuthModal({ onAuthSuccess }: AuthModalProps) {
                 ? 'Sign In'
                 : 'Create Account'}
             </button>
-          </div>
+
+            {/* Semantic platform feature highlights for crawlers & accessibility */}
+            <section className="auth-features-summary" aria-label="Platform Architecture">
+              <h2 className="sr-only">Real-Time Chat Application Architecture</h2>
+              <div className="auth-tech-badges">
+                <span>React</span>
+                <span>TypeScript</span>
+                <span>Node.js</span>
+                <span>Express</span>
+                <span>MongoDB</span>
+                <span>Socket.IO</span>
+              </div>
+              <h3 className="sr-only">Key Communication Features</h3>
+              <p className="auth-features-text">
+                Real-time messaging, private chats, group conversations, voice &amp; video calling, and live presence.
+              </p>
+            </section>
+          </footer>
         </form>
       </div>
-    </div>
+    </main>
   );
 }
 
